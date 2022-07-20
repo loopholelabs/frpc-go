@@ -1,0 +1,17 @@
+{{define "imports"}}
+import (
+{{range $im := .requiredImports -}}
+    "{{$im}}"
+{{end -}}
+{{ if .numServices }}
+{{range $im := .serviceImports -}}
+    "{{$im}}"
+{{end -}}
+{{end}}
+{{ if .numMethods }}
+{{range $im := .methodImports -}}
+    "{{$im}}"
+{{end -}}
+{{end}}
+)
+{{end}}

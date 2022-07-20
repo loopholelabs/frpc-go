@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option go_package = "/noservice";
+
+message Request {
+  string Message = 1;
+}
+
+message Response{
+  string Message = 1;
+}

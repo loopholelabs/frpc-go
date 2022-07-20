@@ -1,0 +1,16 @@
+{{define "interfaces"}}
+{{range $i, $v := (MakeIterable .services.Len) -}}
+{{ $service := ($.services.Get $i) -}}
+{{template "interface" $service}}
+{{end -}}
+{{end}}
+
+
+{{define "interface"}}
+type {{ CamelCaseName .Name }} interface {
+    {{ range $i, $v := MakeIterable .Methods.Len -}}
+    {{ $method := $.Methods.Get $i -}}
+    {{ CamelCaseName $method.Name }} (context.Context, *{{ CamelCase $method.Input.FullName }}) (*{{ CamelCase $method.Output.FullName }}, error)
+    {{ end -}}
+}
+{{end}}

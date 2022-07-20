@@ -1,0 +1,3 @@
+- Shivansh Vij <shivanshvij@loopholelabs.io> @shivanshvij
+- Alex Sørlie Glomsaas <alexsorlieglomsaas@loopholelabs.io> @supermanifolds
+- Felicitas Pojtinger <felicitaspojtinger@loopholelabs.io> @pojntfx

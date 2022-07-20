@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+option go_package = "/test";
+
+service EchoService {
+  rpc Echo(Request) returns (Response);
+  rpc Testy(SearchResponse) returns (StockPricesWrapper);
+}
+
+message Request {
+  string Message = 1;
+  enum Corpus {
+    UNIVERSAL = 0;
+    WEB = 1;
+    IMAGES = 2;
+    LOCAL = 3;
+    NEWS = 4;
+    PRODUCTS = 5;
+    VIDEO = 6;
+  }
+  Corpus corpus = 4;
+}
+
+message Response{
+  string Message = 1;
+  Data Test = 2;
+}
+
+enum Test {
+  Potato = 0;
+  Monkey = 1;
+}
+
+message Data{
+  string Message = 1;
+  Test Checker = 2;
+}
+
+message MyMessage1 {
+  enum EnumAllowingAlias {
+    option allow_alias = true;
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 1;
+  }
+}
+message MyMessage2 {
+  enum EnumNotAllowingAlias {
+    UNKNOWN = 0;
+    STARTED = 1;
+  }
+}
+
+message SearchResponse {
+  message Result {
+    string url = 1;
+    string title = 2;
+    repeated string snippets = 3;
+  }
+  repeated Result results = 1;
+  repeated Result results2 = 2;
+  repeated string snippets = 3;
+  repeated string snippets2 = 4;
+}
+
+message Resulting {
+  string url = 1;
+  string title = 2;
+  repeated string snippets = 3;
+}
+
+message SomeOtherMessage {
+  SearchResponse.Result result = 1;
+}
+
+message Outer {// Level 0
+  message MiddleAA {// Level 1
+    message Inner {// Level 2
+      int64 ival = 1;
+      bool  booly = 2;
+    }
+    Inner inner = 1;
+  }
+  message MiddleBB {// Level 1
+    message Inner {// Level 2
+      int32 ival = 1;
+      bool  booly = 2;
+    }
+    Inner inner = 1;
+  }
+  MiddleAA a = 1;
+  MiddleBB b = 2;
+}
+
+message SampleMessage {
+  oneof test_oneof {
+    string name = 4;
+    string potato = 9;
+  }
+}
+
+message TestPotato {
+  map<string, Test> prices = 1;
+}
+
+
+message StockPrices {
+  map<string, double> prices = 1;
+}
+
+message StockPricesWrapper {
+  repeated StockPrices sPrices = 1;
+}
+
+message StockPricesSuperWrap {
+  map<string, StockPricesWrapper> prices = 1;
+}

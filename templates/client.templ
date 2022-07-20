@@ -1,0 +1,110 @@
+{{define "client"}}
+type Client struct {
+    *frisbee.Client
+    {{ range $i, $v := (MakeIterable .services.Len) -}}
+        {{ $service := $.services.Get $i -}}
+        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+            {{ $method := $service.Methods.Get $i -}}
+            next{{ CamelCaseName $method.Name }} atomic.Value
+            inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
+            inflight{{ CamelCaseName $method.Name }} map[uint16]chan *{{ CamelCase $method.Output.FullName }}
+        {{end -}}
+    {{end -}}
+}
+
+func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) {
+    c := new(Client)
+    table := make(frisbee.HandlerTable)
+    {{template "clienthandlers" .services -}}
+
+    var err error
+    if tlsConfig != nil {
+        c.Client, err = frisbee.NewClient(table, context.Background(), frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
+        if err != nil {
+            return nil, err
+        }
+    } else {
+        c.Client, err = frisbee.NewClient(table, context.Background(), frisbee.WithLogger(logger))
+        if err != nil {
+            return nil, err
+        }
+    }
+
+    {{ range $i, $v := (MakeIterable .services.Len) -}}
+        {{ $service := $.services.Get $i -}}
+        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+            {{ $method := $service.Methods.Get $i -}}
+            c.next{{ CamelCaseName $method.Name }}.Store(uint16(0))
+                c.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
+        {{end -}}
+    {{end -}}
+    return c, nil
+}
+
+{{template "clientmethods" .services }}
+{{end}}
+
+{{define "clienthandlers"}}
+{{ $counter := Counter 9 -}}
+{{ range $i, $v := (MakeIterable .Len) }}
+    {{ $service := $.Get $i -}}
+    {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+        {{ $method := $service.Methods.Get $i -}}
+        {{ $count := call $counter -}}
+        table[{{ $count }}] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
+            c.inflight{{ CamelCaseName $method.Name }}Mu.RLock()
+            if ch, ok := c.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
+                c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
+                res := New{{ CamelCase $method.Output.FullName }}()
+                res.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
+                ch <- res
+            } else {
+                c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
+            }
+            return
+        }
+    {{end -}}
+{{end -}}
+{{end}}
+
+{{define "clientmethods"}}
+{{ $counter := Counter 9 -}}
+{{ range $i, $v := (MakeIterable .Len) -}}
+    {{ $service := $.Get $i -}}
+    {{ range $i, $v := (MakeIterable $service.Methods.Len) }}
+        {{ $method := $service.Methods.Get $i -}}
+        {{ $opIndex := call $counter -}}
+        func (c *Client) {{ CamelCaseName $method.Name }}(ctx context.Context, req *{{ CamelCase $method.Input.FullName }}) (res *{{ CamelCase $method.Output.FullName }}, err error) {
+            ch := make(chan *{{ CamelCase $method.Output.FullName }}, 1)
+            p := packet.Get()
+            p.Metadata.Operation = {{ $opIndex }}
+            LOOP:
+            p.Metadata.Id = c.next{{ CamelCaseName $method.Name }}.Load().(uint16)
+            if !c.next{{ CamelCaseName $method.Name }}.CompareAndSwap(p.Metadata.Id, p.Metadata.Id+1) {
+                goto LOOP
+            }
+            req.Encode(p.Content)
+            p.Metadata.ContentLength = uint32(len(*p.Content))
+            c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
+            c.inflight{{ CamelCaseName $method.Name }}[p.Metadata.Id] = ch
+            c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
+            err = c.Client.WritePacket(p)
+            if err != nil {
+                packet.Put(p)
+                return
+            }
+            select {
+                case res = <- ch:
+                    err = res.error
+                case <- ctx.Done():
+                    err = ctx.Err()
+            }
+            c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
+            delete(c.inflight{{ CamelCaseName $method.Name }}, p.Metadata.Id)
+            c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
+            packet.Put(p)
+            return
+        }
+    {{end -}}
+{{end -}}
+{{end}}

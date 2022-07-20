@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "/simple";
+
+service SimpleService {
+  rpc Echo(stream Request) returns (stream Response);
+}
+
+message Request {
+  string Message = 1;
+}
+
+message Response{
+  string Message = 1;
+}

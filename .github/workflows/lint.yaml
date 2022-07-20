@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache Linters/Formatters
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/trunk
+          key: trunk-${{ runner.os }}
+
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
