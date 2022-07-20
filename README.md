@@ -3,7 +3,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://github.com/loopholelabs/frpc-go/actions/workflows/tests.yaml/badge.svg)](https://github.com/loopholelabs/frpc-go/actions/workflows/tests.yaml)
 
-This is the [Go](http://golang.org) implementation of [fRPC](https://frpc.io), a high-performance RPC framework for 
+This is the [Go](http://golang.org) implementation of [fRPC](https://frpc.io), a high-performance RPC framework for
 designed for performance and stability, and it uses [frisbee-go](https://github.com/loopholelabs/frisbee-go) messaging framework under the hood.
 
 **This library requires Go1.18 or later.**
