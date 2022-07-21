@@ -19,7 +19,7 @@ same is true for selected other new features explicitly marked as
 
 Usage instructions and documentation for fRPC is available at [https://frpc.io/](https://frpc.io/).
 
-The fRPC Generator is still in very early **Alpha**. While it is functional and being used within other products
+The fRPC is still in very early **Alpha**. While it is functional and being used within other products
 we're building at [Loophole Labs][loophomepage], the `proto3` spec has a myriad of edge-cases that make it difficult to
 guarantee validity of generated RPC frameworks without extensive real-world use.
 
