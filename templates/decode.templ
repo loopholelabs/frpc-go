@@ -15,12 +15,14 @@ func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
         return nil
     }
     var err error
+
     x.error, err = d.Error()
     if err != nil {
-        x.ignore, err = d.Bool()
+        x.flags, err = d.Uint8()
         if err != nil {
             return err
         }
+
         {{ $decoding := GetDecodingFields .Fields -}}
         {{ range $field := $decoding.Other -}}
             {{ $decoder := GetLUTDecoder $field.Kind -}}
@@ -91,6 +93,11 @@ func (x *{{CamelCase .FullName}}) decode(d *polyglot.Decoder) error {
                 }
             {{end -}}
         {{end -}}
+    } else {
+        x.flags, err = d.Uint8()
+        if err != nil {
+            return err
+        }
     }
     return nil
 }
