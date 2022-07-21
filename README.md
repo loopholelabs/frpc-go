@@ -11,7 +11,7 @@ designed for performance and stability, and it uses [frisbee-go](https://frpc.io
 ## Important note about releases and stability
 
 This repository generally follows [Semantic Versioning](https://semver.org/). However, **this library is currently in
-Beta** and is still considered experimental. Breaking changes of the library will _not_ trigger a new major release. The
+Alpha** and is still considered experimental. Breaking changes of the library will _not_ trigger a new major release. The
 same is true for selected other new features explicitly marked as
 **EXPERIMENTAL** in CHANGELOG.md.
 
