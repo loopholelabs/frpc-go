@@ -19,7 +19,7 @@ package generator
 import (
 	"errors"
 	"fmt"
-	"github.com/loopholelabs/frpc-go/internal/utils"
+	"github.com/loopholelabs/frisbee-go/protoc-gen-frpc/internal/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -86,22 +86,22 @@ var (
 	}
 
 	kindLUT = map[protoreflect.Kind]string{
-		protoreflect.BoolKind:     "polyglot.BoolKind",
-		protoreflect.Int32Kind:    "polyglot.Int32Kind",
-		protoreflect.Sint32Kind:   "polyglot.Int32Kind",
-		protoreflect.Uint32Kind:   "polyglot.Uint32Kind",
-		protoreflect.Int64Kind:    "polyglot.Int64Kind",
-		protoreflect.Sint64Kind:   "polyglot.Int64Kind",
-		protoreflect.Uint64Kind:   "polyglot.Uint64Kind",
-		protoreflect.Sfixed32Kind: "polyglot.Int32Kind",
-		protoreflect.Sfixed64Kind: "polyglot.Int64Kind",
-		protoreflect.Fixed32Kind:  "polyglot.Uint32Kind",
-		protoreflect.Fixed64Kind:  "polyglot.Uint64Kind",
-		protoreflect.StringKind:   "polyglot.StringKind",
-		protoreflect.FloatKind:    "polyglot.Float32Kind",
-		protoreflect.DoubleKind:   "polyglot.Float64Kind",
-		protoreflect.BytesKind:    "polyglot.BytesKind",
-		protoreflect.EnumKind:     "polyglot.Uint32Kind",
+		protoreflect.BoolKind:     "packet.BoolKind",
+		protoreflect.Int32Kind:    "packet.Int32Kind",
+		protoreflect.Sint32Kind:   "packet.Int32Kind",
+		protoreflect.Uint32Kind:   "packet.Uint32Kind",
+		protoreflect.Int64Kind:    "packet.Int64Kind",
+		protoreflect.Sint64Kind:   "packet.Int64Kind",
+		protoreflect.Uint64Kind:   "packet.Uint64Kind",
+		protoreflect.Sfixed32Kind: "packet.Int32Kind",
+		protoreflect.Sfixed64Kind: "packet.Int64Kind",
+		protoreflect.Fixed32Kind:  "packet.Uint32Kind",
+		protoreflect.Fixed64Kind:  "packet.Uint64Kind",
+		protoreflect.StringKind:   "packet.StringKind",
+		protoreflect.FloatKind:    "packet.Float32Kind",
+		protoreflect.DoubleKind:   "packet.Float64Kind",
+		protoreflect.BytesKind:    "packet.BytesKind",
+		protoreflect.EnumKind:     "packet.Uint32Kind",
 	}
 )
 
@@ -222,7 +222,7 @@ func getKind(kind protoreflect.Kind) string {
 	if outKind, ok = kindLUT[kind]; !ok {
 		switch kind {
 		case protoreflect.MessageKind:
-			outKind = polyglotAnyKind
+			outKind = packetAnyKind
 		default:
 			panic(errUnknownKind)
 		}

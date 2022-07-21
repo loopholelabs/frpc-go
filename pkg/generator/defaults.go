@@ -17,11 +17,11 @@
 package generator
 
 const (
-	extension       = ".frpc.go"
-	pointer         = "*"
-	space           = " "
-	comma           = ","
-	mapSuffix       = "Map"
-	slice           = "[]"
-	polyglotAnyKind = "polyglot.AnyKind"
+	extension     = ".frpc.go"
+	pointer       = "*"
+	space         = " "
+	comma         = ","
+	mapSuffix     = "Map"
+	slice         = "[]"
+	packetAnyKind = "packet.AnyKind"
 )

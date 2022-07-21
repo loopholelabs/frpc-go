@@ -21,6 +21,7 @@ var (
 		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/loopholelabs/polyglot-go",
 		"errors",
+		"io",
 	}
 
 	serviceImports = []string{
@@ -30,8 +31,12 @@ var (
 		"context",
 	}
 
+	streamMethodImports = []string{
+		"github.com/loopholelabs/common/pkg/queue",
+		"go.uber.org/atomic",
+	}
+
 	methodImports = []string{
 		"sync",
-		"sync/atomic",
 	}
 )
