@@ -85,7 +85,7 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
             if ch, ok := c.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
                 c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
                 res := New{{ CamelCase $method.Output.FullName }}()
-                res.Decode(*incoming.Content)
+                res.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
                 ch <- res
             } else {
                 c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()

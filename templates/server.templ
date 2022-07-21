@@ -158,7 +158,7 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
             {{ $count := call $counter -}}
             table[{{ $count }}] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
                 req := New{{ CamelCase $method.Input.FullName  }}()
-                err := req.Decode(*incoming.Content)
+                err := req.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
                 if err == nil {
                 {{ if or $method.IsStreamingClient $method.IsStreamingServer -}}
                     id := incoming.Metadata.Id
