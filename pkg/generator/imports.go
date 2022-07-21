@@ -21,7 +21,6 @@ var (
 		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/loopholelabs/polyglot-go",
 		"errors",
-		"io",
 	}
 
 	serviceImports = []string{

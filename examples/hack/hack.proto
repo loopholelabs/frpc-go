@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "/hack";
+
+service EchoService {
+  rpc SendNumbers(stream Count) returns (Response);
+  rpc GetNumbers(Request) returns (stream Count);
+  rpc ExchangeNumbers(stream Count) returns (stream Count);
+}
+
+message Request {
+  int32 InitialCount = 1;
+}
+
+message Count {
+  int32 Result = 1;
+}
+
+message Response{
+  int32 Count = 1;
+}
