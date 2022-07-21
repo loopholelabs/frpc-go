@@ -21,18 +21,18 @@ Usage instructions and documentation for fRPC is available at [https://frpc.io/]
 
 The fRPC is still in very early **Alpha**. While it is functional and being used within other products
 we're building at [Loophole Labs][loophomepage], the `proto3` spec has a myriad of edge-cases that make it difficult to
-guarantee validity of generated RPC frameworks without extensive real-world use.
+guarantee validity of generated RPC code without extensive real-world use.
 
 That being said, as the library matures and usage of fRPC grows we'll be able to increase our testing
-coverage and fix any edge case bugs. One of the major benefits to the RPC framework is that reading the generated code
+coverage and fix any edge cases and bugs. One of the major benefits to the RPC framework is that reading the generated code
 is extremely straight forward, making it easy to debug potential issues down the line.
 
 ### Unsupported Features
 
-The Frisbee RPC Generator currently does not support the following features, though they are actively being worked on:
+fRPC currently does not support the following features, though they are actively being worked on:
 
-- `OneOf` Message Types
 - Streaming Messages between the client and server
+- `OneOf` Message Types
 
 Example `Proto3` files can be found [here](/examples).
 
