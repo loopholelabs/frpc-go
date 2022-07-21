@@ -20,7 +20,6 @@ var (
 	requiredImports = []string{
 		"github.com/loopholelabs/polyglot-go",
 		"errors",
-		"io",
 	}
 
 	serviceImports = []string{
