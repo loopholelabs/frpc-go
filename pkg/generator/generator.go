@@ -20,9 +20,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"text/template"
 
-	"github.com/loopholelabs/frisbee-go/protoc-gen-frpc/internal/utils"
-	"github.com/loopholelabs/frisbee-go/protoc-gen-frpc/internal/version"
-	"github.com/loopholelabs/frisbee-go/protoc-gen-frpc/templates"
+	"github.com/loopholelabs/frpc-go/internal/utils"
+	"github.com/loopholelabs/frpc-go/internal/version"
+	"github.com/loopholelabs/frpc-go/templates"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/pluginpb"
