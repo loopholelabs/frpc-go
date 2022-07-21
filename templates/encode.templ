@@ -21,14 +21,14 @@ func (x *{{ CamelCase .FullName }}) Encode (b *polyglot.Buffer) {
     {{ range $field := .SliceFields -}}
         {{ $encoder := GetLUTEncoder $field.Kind -}}
         {{ if and (eq $encoder "") (eq $field.Kind 11) -}} {{/* protoreflect.MessageKind */ -}}
-        polyglot.Encoder(p).Slice(uint32(len(x.{{ CamelCaseName $field.Name }})), packet.AnyKind)
+        polyglot.Encoder(b).Slice(uint32(len(x.{{ CamelCaseName $field.Name }})), polyglot.AnyKind)
         for _, v := range x.{{CamelCaseName $field.Name}} {
-            v.Encode(p)
+            v.Encode(b)
         }
         {{else -}}
-        polyglot.Encoder(p).Slice(uint32(len(x.{{ CamelCaseName $field.Name }})), {{ GetKindLUT $field.Kind }})
+        polyglot.Encoder(b).Slice(uint32(len(x.{{ CamelCaseName $field.Name }})), {{ GetKindLUT $field.Kind }})
         for _, v := range x.{{ CamelCaseName $field.Name }} {
-            polyglot.Encoder(p){{$encoder}}(v)
+            polyglot.Encoder(b){{$encoder}}(v)
         }
         {{end -}}
     {{end -}}
@@ -36,6 +36,6 @@ func (x *{{ CamelCase .FullName }}) Encode (b *polyglot.Buffer) {
 
 {{define "encodeMessages"}}
     {{ range $field := .MessageFields -}}
-        x.{{ CamelCaseName $field.Name }}.Encode(p)
+        x.{{ CamelCaseName $field.Name }}.Encode(b)
     {{end -}}
 {{end}}
