@@ -24,14 +24,10 @@ var (
 
 	serviceImports = []string{
 		"github.com/loopholelabs/frisbee-go",
+		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/rs/zerolog",
 		"crypto/tls",
 		"context",
-	}
-
-	streamMethodImports = []string{
-		"github.com/loopholelabs/common/pkg/queue",
-		"go.uber.org/atomic",
 	}
 
 	methodImports = []string{
