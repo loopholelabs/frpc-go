@@ -6,9 +6,7 @@ go 1.18
 require (
 	github.com/loopholelabs/frisbee-go v0.5.2
 	github.com/loopholelabs/polyglot-go v0.4.0
-	github.com/loopholelabs/testing v0.2.3
 	github.com/rs/zerolog v1.27.0
-	github.com/stretchr/testify v1.8.0
 	google.golang.org/protobuf v1.28.0
 )
 
