@@ -31,7 +31,6 @@ var (
 	}
 
 	methodImports = []string{
-		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"sync",
 	}
 )
