@@ -39,6 +39,10 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
                 req := New{{ CamelCase $method.Input.FullName  }}()
                 err := req.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
                 if err == nil {
+                    if req.ignore {
+                        {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(ctx, req)
+                        return
+                    }
                     var res *{{ CamelCase $method.Output.FullName }}
                     outgoing = incoming
                     outgoing.Content.Reset()
