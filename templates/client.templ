@@ -35,7 +35,10 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
         {{ $service := $.services.Get $i -}}
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
+
+                c.next{{ CamelCaseName $method.Name }}Mu.Lock()
                 c.next{{ CamelCaseName $method.Name }} = 0
+                c.next{{ CamelCaseName $method.Name }}Mu.Unlock()
                 c.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
         {{end -}}
     {{end -}}
