@@ -104,7 +104,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		if !f.Generate {
 			continue
 		}
-		genFile := plugin.NewGeneratedFile(generator.FileName(f.GeneratedFilenamePrefix), f.GoImportPath)
+		genFile := plugin.NewGeneratedFile(FileName(f.GeneratedFilenamePrefix), f.GoImportPath)
 
 		packageName := string(f.Desc.Package().Name())
 		if packageName == "" {
