@@ -10,8 +10,8 @@ Fixes # (issue)
 
 - [ ] Bug fix (non-breaking change which fixes an issue) [title: 'fix:']
 - [ ] New feature (non-breaking change which adds functionality) [title: 'feat:']
-- [ ] Refactor (non-breaking code changes that do not add new functionality or break existing functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected) [title: 'refactor:']
+- [ ] Refactor (non-breaking code changes that do not add new functionality or break existing functionality) [title: 'refactor:']
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] This change requires a documentation update
 
 ## Testing
