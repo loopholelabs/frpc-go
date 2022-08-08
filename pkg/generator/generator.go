@@ -129,6 +129,9 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			"numServices":     numServices,
 			"numMethods":      numMethods,
 		})
+		if err != nil {
+			return nil, err
+		}
 
 		err = gen.ExecuteTemplate(genFile, f, packageName, false)
 		if err != nil {
