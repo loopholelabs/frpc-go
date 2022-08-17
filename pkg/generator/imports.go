@@ -18,7 +18,6 @@ package generator
 
 var (
 	requiredImports = []string{
-		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/loopholelabs/polyglot-go",
 		"errors",
 	}
@@ -36,6 +35,7 @@ var (
 	}
 
 	methodImports = []string{
+		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"sync",
 	}
 )
