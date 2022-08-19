@@ -4,26 +4,29 @@ type Server struct {
 }
 
 func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *zerolog.Logger) (*Server, error) {
+        var s *Server
         table := make(frisbee.HandlerTable)
         {{template "serverhandlers" .services -}}
-        var s *frisbee.Server
+        var fsrv *frisbee.Server
         var err error
         if tlsConfig != nil {
-            s, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
+            fsrv, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
             if err != nil {
                 return nil, err
             }
         } else {
-            s, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
+            fsrv, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
             if err != nil {
                 return nil, err
             }
         }
-        return &Server{
-            Server: s,
+
+        s, err = &Server{
+            Server: fsrv,
         }, nil
+        return s, err
     }
-{{end}}
+{{ end -}}
 
 {{define "serverhandlers"}}
     {{ $counter := Counter 9 -}}
@@ -38,18 +41,18 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
                 if err == nil {
                     if req.ignore {
                         {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(ctx, req)
-                    } else {
-                        var res *{{ CamelCase $method.Output.FullName }}
-                        outgoing = incoming
-                        outgoing.Content.Reset()
-                        res, err = {{ FirstLowerCase (CamelCaseName $service.Name) }}.{{ CamelCaseName $method.Name }}(ctx, req)
-                        if err != nil {
-                            res.Error(outgoing.Content, err)
-                        } else {
-                            res.Encode(outgoing.Content)
-                        }
-                        outgoing.Metadata.ContentLength = uint32(len(*outgoing.Content))
+                        return
                     }
+                    var res *{{ CamelCase $method.Output.FullName }}
+                    outgoing = incoming
+                    outgoing.Content.Reset()
+                    res, err = {{ FirstLowerCase (CamelCaseName $service.Name) }}.{{ CamelCaseName $method.Name }}(ctx, req)
+                    if err != nil {
+                        res.Error(outgoing.Content, err)
+                    } else {
+                        res.Encode(outgoing.Content)
+                    }
+                    outgoing.Metadata.ContentLength = uint32(len(*outgoing.Content))
                 }
                 return
             }

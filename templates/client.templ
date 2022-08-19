@@ -5,9 +5,10 @@ type Client struct {
         {{ $service := $.services.Get $i -}}
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
-            next{{ CamelCaseName $method.Name }} atomic.Value
-            inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
+            next{{ CamelCaseName $method.Name }} uint16
+            next{{ CamelCaseName $method.Name }}Mu sync.RWMutex
             inflight{{ CamelCaseName $method.Name }} map[uint16]chan *{{ CamelCase $method.Output.FullName }}
+            inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
         {{end -}}
     {{end -}}
 }
@@ -34,7 +35,10 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
         {{ $service := $.services.Get $i -}}
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
-            c.next{{ CamelCaseName $method.Name }}.Store(uint16(0))
+
+                c.next{{ CamelCaseName $method.Name }}Mu.Lock()
+                c.next{{ CamelCaseName $method.Name }} = 0
+                c.next{{ CamelCaseName $method.Name }}Mu.Unlock()
                 c.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
         {{end -}}
     {{end -}}
@@ -42,7 +46,7 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
 }
 
 {{template "clientmethods" .services }}
-{{end}}
+{{ end -}}
 
 {{define "clienthandlers"}}
 {{ $counter := Counter 9 -}}
@@ -65,7 +69,7 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
         }
     {{end -}}
 {{end -}}
-{{end}}
+{{ end -}}
 
 {{define "clientmethods"}}
 {{ $counter := Counter 9 -}}
@@ -78,15 +82,17 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
             ch := make(chan *{{ CamelCase $method.Output.FullName }}, 1)
             p := packet.Get()
             p.Metadata.Operation = {{ $opIndex }}
-            LOOP:
-            p.Metadata.Id = c.next{{ CamelCaseName $method.Name }}.Load().(uint16)
-            if !c.next{{ CamelCaseName $method.Name }}.CompareAndSwap(p.Metadata.Id, p.Metadata.Id+1) {
-                goto LOOP
-            }
+
+            c.next{{ CamelCaseName $method.Name }}Mu.Lock()
+            c.next{{ CamelCaseName $method.Name }} += 1
+            id := c.next{{ CamelCaseName $method.Name }}
+            c.next{{ CamelCaseName $method.Name }}Mu.Unlock()
+            p.Metadata.Id = id
+
             req.Encode(p.Content)
             p.Metadata.ContentLength = uint32(len(*p.Content))
             c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-            c.inflight{{ CamelCaseName $method.Name }}[p.Metadata.Id] = ch
+            c.inflight{{ CamelCaseName $method.Name }}[id] = ch
             c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
             err = c.Client.WritePacket(p)
             if err != nil {
@@ -100,11 +106,11 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
                     err = ctx.Err()
             }
             c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-            delete(c.inflight{{ CamelCaseName $method.Name }}, p.Metadata.Id)
+            delete(c.inflight{{ CamelCaseName $method.Name }}, id)
             c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
             packet.Put(p)
             return
         }
-    {{end -}}
+{{end -}}
 {{end -}}
 {{end}}

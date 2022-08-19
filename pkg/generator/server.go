@@ -17,7 +17,7 @@
 package generator
 
 import (
-	"github.com/loopholelabs/frpc-go/internal/utils"
+	"github.com/loopholelabs/polyglot-go/pkg/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"strings"
 )
@@ -28,10 +28,10 @@ func getServerFields(services protoreflect.ServiceDescriptors) string {
 		service := services.Get(i)
 		serviceName := utils.CamelCase(string(service.Name()))
 		builder.WriteString(utils.FirstLowerCase(serviceName))
-		builder.WriteString(space)
+		builder.WriteString(" ")
 		builder.WriteString(serviceName)
-		builder.WriteString(comma)
-		builder.WriteString(space)
+		builder.WriteString(",")
+		builder.WriteString(" ")
 	}
 	serverFields := builder.String()
 	serverFields = serverFields[:len(serverFields)-2]
