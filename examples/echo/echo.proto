@@ -6,8 +6,17 @@ service EchoService {
   rpc Echo(Request) returns (Response);
 }
 
+service TestService {
+  rpc Echo(Request) returns (Response);
+}
+
+message Array {
+  repeated string value = 1;
+}
+
 message Request {
-  string Message = 1;
+  map <string, Array> metadata = 1;
+  string Message = 2;
 }
 
 message Response{
