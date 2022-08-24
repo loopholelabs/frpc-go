@@ -1,14 +1,24 @@
 {{define "client"}}
+{{ range $i, $v := (MakeIterable .services.Len) -}}
+    {{ $service := $.services.Get $i -}}
+    type sub{{ CamelCaseName $service.Name }}Client struct {
+         client *frisbee.Client
+         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+             {{ $method := $service.Methods.Get $i -}}
+             next{{ CamelCaseName $method.Name }} uint16
+             next{{ CamelCaseName $method.Name }}Mu sync.RWMutex
+             inflight{{ CamelCaseName $method.Name }} map[uint16]chan *{{ CamelCase $method.Output.FullName }}
+             inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
+         {{end -}}
+    }
+{{end -}}
+
+
 type Client struct {
     *frisbee.Client
     {{ range $i, $v := (MakeIterable .services.Len) -}}
         {{ $service := $.services.Get $i -}}
-        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
-            {{ $method := $service.Methods.Get $i -}}
-            next{{ CamelCaseName $method.Name }} atomic.Value
-            inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
-            inflight{{ CamelCaseName $method.Name }} map[uint16]chan *{{ CamelCase $method.Output.FullName }}
-        {{end -}}
+        {{ CamelCaseName $service.Name }} *sub{{ CamelCaseName $service.Name }}Client
     {{end -}}
 }
 
@@ -32,17 +42,25 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
 
     {{ range $i, $v := (MakeIterable .services.Len) -}}
         {{ $service := $.services.Get $i -}}
+        c.{{ CamelCaseName $service.Name }} = new(sub{{ CamelCaseName $service.Name }}Client)
+        c.{{ CamelCaseName $service.Name }}.client = c.Client
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
-            c.next{{ CamelCaseName $method.Name }}.Store(uint16(0))
-                c.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
+            c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
+        {{end -}}
+        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+            {{ $method := $service.Methods.Get $i -}}
+                c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }}Mu.Lock()
+                c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }} = 0
+                c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }}Mu.Unlock()
+                c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
         {{end -}}
     {{end -}}
     return c, nil
 }
 
 {{template "clientmethods" .services }}
-{{end}}
+{{ end -}}
 
 {{define "clienthandlers"}}
 {{ $counter := Counter 9 -}}
@@ -52,20 +70,20 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
         {{ $method := $service.Methods.Get $i -}}
         {{ $count := call $counter -}}
         table[{{ $count }}] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
-            c.inflight{{ CamelCaseName $method.Name }}Mu.RLock()
-            if ch, ok := c.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
-                c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
+            c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RLock()
+            if ch, ok := c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
+                c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
                 res := New{{ CamelCase $method.Output.FullName }}()
                 res.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
                 ch <- res
             } else {
-                c.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
+                c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
             }
             return
         }
     {{end -}}
 {{end -}}
-{{end}}
+{{ end -}}
 
 {{define "clientmethods"}}
 {{ $counter := Counter 9 -}}
@@ -74,21 +92,23 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
     {{ range $i, $v := (MakeIterable $service.Methods.Len) }}
         {{ $method := $service.Methods.Get $i -}}
         {{ $opIndex := call $counter -}}
-        func (c *Client) {{ CamelCaseName $method.Name }}(ctx context.Context, req *{{ CamelCase $method.Input.FullName }}) (res *{{ CamelCase $method.Output.FullName }}, err error) {
+        func (c *sub{{ CamelCaseName $service.Name }}Client) {{ CamelCaseName $method.Name }}(ctx context.Context, req *{{ CamelCase $method.Input.FullName }}) (res *{{ CamelCase $method.Output.FullName }}, err error) {
             ch := make(chan *{{ CamelCase $method.Output.FullName }}, 1)
             p := packet.Get()
             p.Metadata.Operation = {{ $opIndex }}
-            LOOP:
-            p.Metadata.Id = c.next{{ CamelCaseName $method.Name }}.Load().(uint16)
-            if !c.next{{ CamelCaseName $method.Name }}.CompareAndSwap(p.Metadata.Id, p.Metadata.Id+1) {
-                goto LOOP
-            }
+
+            c.next{{ CamelCaseName $method.Name }}Mu.Lock()
+            c.next{{ CamelCaseName $method.Name }} += 1
+            id := c.next{{ CamelCaseName $method.Name }}
+            c.next{{ CamelCaseName $method.Name }}Mu.Unlock()
+            p.Metadata.Id = id
+
             req.Encode(p.Content)
             p.Metadata.ContentLength = uint32(len(*p.Content))
             c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-            c.inflight{{ CamelCaseName $method.Name }}[p.Metadata.Id] = ch
+            c.inflight{{ CamelCaseName $method.Name }}[id] = ch
             c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
-            err = c.Client.WritePacket(p)
+            err = c.client.WritePacket(p)
             if err != nil {
                 packet.Put(p)
                 return
@@ -100,11 +120,11 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
                     err = ctx.Err()
             }
             c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-            delete(c.inflight{{ CamelCaseName $method.Name }}, p.Metadata.Id)
+            delete(c.inflight{{ CamelCaseName $method.Name }}, id)
             c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
             packet.Put(p)
             return
         }
-    {{end -}}
+{{end -}}
 {{end -}}
 {{end}}

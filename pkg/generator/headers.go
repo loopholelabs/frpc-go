@@ -16,10 +16,10 @@
 
 package generator
 
-import (
-	"github.com/loopholelabs/frpc-go/internal/utils"
-)
+import "github.com/loopholelabs/polyglot-go/pkg/utils"
 
-func fileName(name string) string {
+const extension = ".frpc.go"
+
+func FileName(name string) string {
 	return utils.AppendString(name, extension)
 }

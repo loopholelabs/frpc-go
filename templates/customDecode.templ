@@ -1,0 +1,8 @@
+x.error, err = d.Error()
+if err == nil {
+    return nil
+}
+x.ignore, err = d.Bool()
+if err != nil {
+    return err
+}

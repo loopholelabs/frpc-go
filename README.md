@@ -4,7 +4,7 @@
 [![Tests](https://github.com/loopholelabs/frpc-go/actions/workflows/tests.yaml/badge.svg)](https://github.com/loopholelabs/frpc-go/actions/workflows/tests.yaml)
 
 This is the [Go](http://golang.org) implementation of [fRPC](https://frpc.io), a high-performance RPC framework for
-designed for performance and stability, and it uses [frisbee-go](https://frpc.io/frisbee) messaging framework under the hood.
+designed for performance and stability, and it uses the [frisbee-go](https://github.com/loopholelabs/frisbee-go) messaging framework under the hood.
 
 **This library requires Go1.18 or later.**
 
@@ -19,12 +19,8 @@ same is true for selected other new features explicitly marked as
 
 Usage instructions and documentation for fRPC is available at [https://frpc.io/](https://frpc.io/).
 
-The fRPC is still in very early **Alpha**. While it is functional and being used within other products
-we're building at [Loophole Labs][loophomepage], the `proto3` spec has a myriad of edge-cases that make it difficult to
-guarantee validity of generated RPC code without extensive real-world use.
-
-That being said, as the library matures and usage of fRPC grows we'll be able to increase our testing
-coverage and fix any edge cases and bugs. One of the major benefits to the RPC framework is that reading the generated code
+fRPC is still in very early \*_Alpha_. There may be bug in the library that will be fixed
+as the library matures and usage of fRPC grows. One of the major benefits to fRPC is that reading the generated code
 is extremely straight forward, making it easy to debug potential issues down the line.
 
 ### Unsupported Features
