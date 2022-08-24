@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.6.0] - 2022-08-24 (Beta)
+
 ## Changes
 
 - Refactoring the generated code to use the [polyglot-go](https://github.com/loopholelabs/polyglot-go) library to generate message encode/decode functions.
