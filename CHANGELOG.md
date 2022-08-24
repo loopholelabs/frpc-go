@@ -11,7 +11,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Changes
 
-- Refactoring the generated code to use the [polyglot-go](https://github.com/loopholelabs/polyglot-go) library to generate message encode/decode functions.
+- Refactoring the generated code to use the [polyglot-go](https://github.com/loopholelabs/polyglot-go) library to generate message encode/decode functions. ([#3](https://github.com/loopholelabs/frpc-go/pull/3))
 
 ## Fixes
 
