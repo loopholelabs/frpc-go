@@ -60,6 +60,18 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
 }
 
 {{template "clientmethods" .services }}
+
+type CloseError struct {
+    err error
+}
+
+func NewCloseError(err error) CloseError {
+    return CloseError{err: err}
+}
+
+func (e CloseError) Error() string {
+    return e.err.Error()
+}
 {{ end -}}
 
 {{define "clienthandlers"}}
