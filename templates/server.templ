@@ -48,6 +48,9 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
                     outgoing.Content.Reset()
                     res, err = {{ FirstLowerCase (CamelCaseName $service.Name) }}.{{ CamelCaseName $method.Name }}(ctx, req)
                     if err != nil {
+                        if _, ok := err.(CloseError); ok {
+                            action = frisbee.CLOSE
+                        }
                         res.Error(outgoing.Content, err)
                     } else {
                         res.Encode(outgoing.Content)
