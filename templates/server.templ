@@ -10,6 +10,7 @@ func NewServerMap[T any]() *ServerMap[T] {
 }
 type Server struct {
     *frisbee.Server
+    OnClosed func()
 
     {{ range $i, $v := (MakeIterable .services.Len) -}}
         {{ $service := $.services.Get $i -}}
@@ -69,6 +70,9 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
                 {{end -}}
             {{end -}}
         {{end -}}
+        if s.OnClosed != nil {
+            s.OnClosed()
+        }
         })
 
         {{ range $i, $v := (MakeIterable .services.Len) -}}
