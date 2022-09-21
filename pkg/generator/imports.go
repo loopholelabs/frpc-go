@@ -18,16 +18,16 @@ package generator
 
 var (
 	requiredImports = []string{
-		"github.com/loopholelabs/polyglot-go",
 		"errors",
+		"github.com/loopholelabs/polyglot-go",
 	}
 
 	serviceImports = []string{
+		"crypto/tls",
+		"context",
 		"github.com/loopholelabs/frisbee-go",
 		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/rs/zerolog",
-		"crypto/tls",
-		"context",
 	}
 
 	streamMethodImports = []string{
