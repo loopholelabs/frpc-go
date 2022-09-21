@@ -8,9 +8,10 @@ type ServerMap[T any] struct {
 func NewServerMap[T any]() *ServerMap[T] {
     return &ServerMap[T]{servers: make(map[uint16]*T)}
 }
+
 type Server struct {
     *frisbee.Server
-    OnClosed func()
+    onClosed func(*frisbee.Async, error)
 
     {{ range $i, $v := (MakeIterable .services.Len) -}}
         {{ $service := $.services.Get $i -}}
@@ -28,65 +29,73 @@ type Server struct {
 }
 
 func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *zerolog.Logger) (*Server, error) {
-        var s *Server
-        table := make(frisbee.HandlerTable)
-        {{template "serverhandlers" .services -}}
-        var fsrv *frisbee.Server
-        var err error
-        if tlsConfig != nil {
-            fsrv, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
-            if err != nil {
-                return nil, err
-            }
-        } else {
-            fsrv, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
-            if err != nil {
-                return nil, err
-            }
+    var s *Server
+    table := make(frisbee.HandlerTable)
+    {{template "serverhandlers" .services -}}
+    var fsrv *frisbee.Server
+    var err error
+    if tlsConfig != nil {
+        fsrv, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
+        if err != nil {
+            return nil, err
         }
-
-        fsrv.ConnContext = func (ctx context.Context, conn *frisbee.Async) context.Context {
-            return context.WithValue(ctx, connectionContextKey, conn)
+    } else {
+        fsrv, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
+        if err != nil {
+            return nil, err
         }
-        s, err = &Server{
-            Server: fsrv,
-        }, nil
-
-        fsrv.SetOnClosed(func(async *frisbee.Async, err error) {
-        {{ range $i, $v := (MakeIterable .services.Len) -}}
-            {{ $service := $.services.Get $i -}}
-            {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
-                {{ $method := $service.Methods.Get $i -}}
-                {{ if $method.IsStreamingClient -}}
-                    s.streams{{ CamelCaseName $method.Name }}Mu.RLock()
-                    if streamMap, ok := s.streams{{ CamelCaseName $method.Name }}[async.RemoteAddr().String()]; ok {
-                    s.streams{{ CamelCaseName $method.Name }}Mu.RUnlock()
-                    for _, stream := range streamMap.servers {
-                    stream.close()
-                    }
-                    return
-                    }
-                    s.streams{{ CamelCaseName $method.Name }}Mu.RUnlock()
-                {{end -}}
-            {{end -}}
-        {{end -}}
-        if s.OnClosed != nil {
-            s.OnClosed()
-        }
-        })
-
-        {{ range $i, $v := (MakeIterable .services.Len) -}}
-            {{ $service := $.services.Get $i -}}
-            {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
-                {{ $method := $service.Methods.Get $i -}}
-                {{ if $method.IsStreamingClient -}}
-                    s.next{{ CamelCaseName $method.Name }} = 0
-                    s.streams{{ CamelCaseName $method.Name }} = make(map[string]*ServerMap[{{ CamelCaseName $method.Name }}Server])
-                {{end -}}
-            {{end -}}
-        {{end -}}
-        return s, err
     }
+
+    fsrv.ConnContext = func (ctx context.Context, conn *frisbee.Async) context.Context {
+        return context.WithValue(ctx, connectionContextKey, conn)
+    }
+    s, err = &Server{
+        Server: fsrv,
+    }, nil
+
+    fsrv.SetOnClosed(func(async *frisbee.Async, err error) {
+    {{ range $i, $v := (MakeIterable .services.Len) -}}
+        {{ $service := $.services.Get $i -}}
+        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+            {{ $method := $service.Methods.Get $i -}}
+            {{ if $method.IsStreamingClient -}}
+                s.streams{{ CamelCaseName $method.Name }}Mu.RLock()
+                if streamMap, ok := s.streams{{ CamelCaseName $method.Name }}[async.RemoteAddr().String()]; ok {
+                s.streams{{ CamelCaseName $method.Name }}Mu.RUnlock()
+                for _, stream := range streamMap.servers {
+                stream.close()
+                }
+                return
+                }
+                s.streams{{ CamelCaseName $method.Name }}Mu.RUnlock()
+            {{end -}}
+        {{end -}}
+    {{end -}}
+        if s.onClosed != nil {
+            s.onClosed(async, err)
+        }
+    })
+
+    {{ range $i, $v := (MakeIterable .services.Len) -}}
+        {{ $service := $.services.Get $i -}}
+        {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
+            {{ $method := $service.Methods.Get $i -}}
+            {{ if $method.IsStreamingClient -}}
+                s.next{{ CamelCaseName $method.Name }} = 0
+                s.streams{{ CamelCaseName $method.Name }} = make(map[string]*ServerMap[{{ CamelCaseName $method.Name }}Server])
+            {{end -}}
+        {{end -}}
+    {{end -}}
+    return s, err
+}
+
+func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
+    if f == nil {
+        return frisbee.OnClosedNil
+    }
+    s.onClosed = f
+    return nil
+}
 
 {{template "servermethods" .services }}
 {{ end -}}
