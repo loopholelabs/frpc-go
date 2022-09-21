@@ -1,0 +1,16 @@
+{{define "constants"}}
+    const connectionContextKey int = 1000
+
+    func SetCloseFlag(flags uint8, close bool) uint8 {
+    return flags | 0x1
+    }
+    func HasCloseFlag(flags uint8) bool {
+    return flags & 1 == 1
+    }
+    func SetErrorFlag(flags uint8, error bool) uint8 {
+    return flags | 0x2
+    }
+    func HasErrorFlag(flags uint8) bool {
+    return flags & (1 << 1) == 1
+    }
+{{end}}

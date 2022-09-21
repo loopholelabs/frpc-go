@@ -12,11 +12,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
       - name: Cache Linters/Formatters
         uses: actions/cache@v2
         with:
           path: ~/.cache/trunk
           key: trunk-${{ runner.os }}
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - name: Install protoc-gen plugin
+        working-directory: ./protoc-gen-go-frpc
+        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - name: Install frpc plugin for protoc-gen
+        working-directory: ./
+        run: go install ./protoc-gen-go-frpc
+      - name: Run generator
+        working-directory: ./examples/test
+        run: protoc --go-frpc_out=../../pkg/generator test.proto
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
