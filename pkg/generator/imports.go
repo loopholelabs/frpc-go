@@ -23,8 +23,8 @@ var (
 	}
 
 	serviceImports = []string{
-		"crypto/tls",
 		"context",
+		"crypto/tls",
 		"github.com/loopholelabs/frisbee-go",
 		"github.com/loopholelabs/frisbee-go/pkg/packet",
 		"github.com/rs/zerolog",
