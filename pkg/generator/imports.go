@@ -33,6 +33,7 @@ var (
 	streamMethodImports = []string{
 		"github.com/loopholelabs/common/pkg/queue",
 		"go.uber.org/atomic",
+		"io",
 	}
 
 	methodImports = []string{
