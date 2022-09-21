@@ -45,7 +45,7 @@ jobs:
         run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
       - name: Install frpc plugin for protoc-gen
         working-directory: ./
-        run: go install protoc-gen-go-frpc
+        run: go install ./protoc-gen-go-frpc
       - name: Run generator
         working-directory: ./examples/test
         run: protoc --go-frpc_out=../../pkg/generator test.proto
