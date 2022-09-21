@@ -143,6 +143,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			"streamMethodImports": streamMethodImports,
 			"numServices":         numServices,
 			"numMethods":          numMethods,
+			"numStreamMethods":    len(streamMethods),
 		})
 		if err != nil {
 			return nil, err
