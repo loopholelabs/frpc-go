@@ -134,14 +134,15 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		}
 
 		err = templ.ExecuteTemplate(genFile, "prebase.templ", map[string]interface{}{
-			"pluginVersion":   version.Version,
-			"sourcePath":      f.Desc.Path(),
-			"package":         packageName,
-			"requiredImports": requiredImports,
-			"serviceImports":  serviceImports,
-			"methodImports":   methodImports,
-			"numServices":     numServices,
-			"numMethods":      numMethods,
+			"pluginVersion":       version.Version,
+			"sourcePath":          f.Desc.Path(),
+			"package":             packageName,
+			"requiredImports":     requiredImports,
+			"serviceImports":      serviceImports,
+			"methodImports":       methodImports,
+			"streamMethodImports": streamMethodImports,
+			"numServices":         numServices,
+			"numMethods":          numMethods,
 		})
 		if err != nil {
 			return nil, err
