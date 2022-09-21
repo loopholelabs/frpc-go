@@ -90,6 +90,7 @@ func (s svc) Upload(srv *UploadServer) error {
 		res, err := srv.Recv()
 		if err == io.EOF {
 			assert.Equal(s.t, 10, received)
+			return srv.CloseSend()
 		}
 		assert.NoError(s.t, err)
 		assert.Equal(s.t, "Hello World", res.Message)

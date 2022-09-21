@@ -43,22 +43,30 @@ func TestRPC(t *testing.T) {
 
 	t.Run("Synchronous Request", func(t *testing.T) {
 		t.Parallel()
-		testSynchronous(client, t)
+		go func() {
+			testSynchronous(client, t)
+		}()
 	})
 
 	t.Run("Bi-directional Stream", func(t *testing.T) {
 		t.Parallel()
-		testBidirectional(client, t)
+		go func() {
+			testBidirectional(client, t)
+		}()
 	})
 
 	t.Run("Server Stream", func(t *testing.T) {
 		t.Parallel()
-		testServerStreaming(client, t)
+		go func() {
+			testServerStreaming(client, t)
+		}()
 	})
 
 	t.Run("Client Stream", func(t *testing.T) {
 		t.Parallel()
-		testClientStreaming(client, t)
+		go func() {
+			testClientStreaming(client, t)
+		}()
 	})
 }
 
