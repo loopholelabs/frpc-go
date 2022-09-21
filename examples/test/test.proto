@@ -4,7 +4,10 @@ option go_package = "/test";
 
 service EchoService {
   rpc Echo(Request) returns (Response);
+  rpc EchoStream(stream Request) returns (stream Response);
   rpc Testy(SearchResponse) returns (StockPricesWrapper);
+  rpc Search(SearchResponse) returns (stream Response);
+  rpc Upload(stream Data) returns (Response);
 }
 
 message Request {

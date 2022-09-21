@@ -30,6 +30,10 @@ var (
 		"context",
 	}
 
+	streamMethodImports = []string{
+		"github.com/loopholelabs/common/pkg/queue",
+	}
+
 	methodImports = []string{
 		"sync",
 	}
