@@ -27,7 +27,6 @@ is extremely straight forward, making it easy to debug potential issues down the
 
 fRPC currently does not support the following features, though they are actively being worked on:
 
-- Streaming Messages between the client and server
 - `OneOf` Message Types
 
 Example `Proto3` files can be found [here](/examples).
