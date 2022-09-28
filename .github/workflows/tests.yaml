@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "*"
+  pull_request:
+    branches:
+      - "*"
 
 jobs:
   tests:
@@ -34,6 +37,18 @@ jobs:
           path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
 
+      - uses: actions/checkout@v3
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - name: Install protoc-gen plugin
+        working-directory: ./protoc-gen-go-frpc
+        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - name: Install frpc plugin for protoc-gen
+        working-directory: ./
+        run: go install ./protoc-gen-go-frpc
+      - name: Run generator
+        working-directory: ./examples/test
+        run: protoc --go-frpc_out=../../pkg/generator test.proto
       - name: Test
         run: go test -v ./...
   tests-race:
@@ -63,6 +78,18 @@ jobs:
         with:
           path: ${{ steps.go-cache-paths.outputs.go-mod }}
           key: ${{ runner.os }}-go-mod-${{ hashFiles('**/go.sum') }}
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+      - name: Install protoc-gen plugin
+        working-directory: ./protoc-gen-go-frpc
+        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - name: Install frpc plugin for protoc-gen
+        working-directory: ./
+        run: go install ./protoc-gen-go-frpc
+      - name: Run generator
+        working-directory: ./examples/test
+        run: protoc --go-frpc_out=../../pkg/generator test.proto
 
       - name: Test with Race Conditions
         run: go test -race -v ./...

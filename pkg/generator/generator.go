@@ -18,15 +18,15 @@ package generator
 
 import (
 	"bytes"
-	"text/template"
-
 	"github.com/loopholelabs/frpc-go/internal/version"
 	"github.com/loopholelabs/frpc-go/templates"
 	"github.com/loopholelabs/polyglot-go/pkg/generator"
 	"github.com/loopholelabs/polyglot-go/pkg/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/pluginpb"
+	"text/template"
 )
 
 type Generator struct {
@@ -34,6 +34,7 @@ type Generator struct {
 }
 
 var templ *template.Template
+var streamMethods = make(map[protoreflect.FullName]bool)
 
 func init() {
 	templ = template.Must(template.New("main").Funcs(template.FuncMap{
@@ -44,6 +45,9 @@ func init() {
 		"FirstLowerCase":     utils.FirstLowerCase,
 		"FirstLowerCaseName": utils.FirstLowerCaseName,
 		"GetServerFields":    getServerFields,
+		"UsedForStreaming": func(typeName protoreflect.FullName) bool {
+			return streamMethods[typeName]
+		},
 	}).ParseFS(templates.FS, "*"))
 }
 
@@ -114,20 +118,32 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		numServices := f.Desc.Services().Len()
 
 		numMethods := 0
+		streamMethods = make(map[protoreflect.FullName]bool)
 		for i := 0; i < numServices; i++ {
 			nM := f.Desc.Services().Get(i).Methods().Len()
 			numMethods += nM
+			for m := 0; m < nM; m++ {
+				method := f.Desc.Services().Get(i).Methods().Get(m)
+				if method.IsStreamingClient() {
+					streamMethods[method.Input().FullName()] = true
+				}
+				if method.IsStreamingServer() {
+					streamMethods[method.Output().FullName()] = true
+				}
+			}
 		}
 
 		err = templ.ExecuteTemplate(genFile, "prebase.templ", map[string]interface{}{
-			"pluginVersion":   version.Version,
-			"sourcePath":      f.Desc.Path(),
-			"package":         packageName,
-			"requiredImports": requiredImports,
-			"serviceImports":  serviceImports,
-			"methodImports":   methodImports,
-			"numServices":     numServices,
-			"numMethods":      numMethods,
+			"pluginVersion":       version.Version,
+			"sourcePath":          f.Desc.Path(),
+			"package":             packageName,
+			"requiredImports":     requiredImports,
+			"serviceImports":      serviceImports,
+			"methodImports":       methodImports,
+			"streamMethodImports": streamMethodImports,
+			"numServices":         numServices,
+			"numMethods":          numMethods,
+			"numStreamMethods":    len(streamMethods),
 		})
 		if err != nil {
 			return nil, err
@@ -139,11 +155,12 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		}
 
 		err = templ.ExecuteTemplate(genFile, "base.templ", map[string]interface{}{
-			"enums":       f.Desc.Enums(),
-			"messages":    f.Desc.Messages(),
-			"services":    f.Desc.Services(),
-			"numServices": numServices,
-			"numMethods":  numMethods,
+			"enums":            f.Desc.Enums(),
+			"messages":         f.Desc.Messages(),
+			"services":         f.Desc.Services(),
+			"numServices":      numServices,
+			"numMethods":       numMethods,
+			"numStreamMethods": len(streamMethods),
 		})
 		if err != nil {
 			return nil, err

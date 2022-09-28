@@ -13,5 +13,10 @@ import (
     "{{$im}}"
 {{end -}}
 {{end}}
+{{ if .numStreamMethods -}}
+    {{range $im := .streamMethodImports -}}
+        "{{$im}}"
+    {{end -}}
+{{end -}}
 )
 {{end}}
