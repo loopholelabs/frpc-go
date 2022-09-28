@@ -19,7 +19,7 @@ same is true for selected other new features explicitly marked as
 
 Usage instructions and documentation for fRPC is available at [https://frpc.io/](https://frpc.io/).
 
-fRPC is still in very early \*_Alpha_. There may be bug in the library that will be fixed
+fRPC is still in very early *Alpha*. There may be bug in the library that will be fixed
 as the library matures and usage of fRPC grows. One of the major benefits to fRPC is that reading the generated code
 is extremely straight forward, making it easy to debug potential issues down the line.
 
