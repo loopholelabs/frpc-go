@@ -69,5 +69,11 @@
     "activeAnchors": "bg-gradient-to-tr",
     "navigationItem": "duration-100"
   },
-  "backgroundImage": "/images/lightbackground.png"
+  "backgroundImage": "/images/lightbackground.png",
+  "analytics": {
+    "posthog": {
+      "apiKey": "phc_WfWunxGOdcI7urnQA4XolSTSisVIh9NI38jTbg2TshT",
+      "apiHost": "https://app.posthog.com"
+    }
+  }
 }
