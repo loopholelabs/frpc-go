@@ -73,7 +73,7 @@
   "analytics": {
     "posthog": {
       "apiKey": "phc_WfWunxGOdcI7urnQA4XolSTSisVIh9NI38jTbg2TshT",
-      "apiHost": "https://random.loopholelabs.io"
+      "apiHost": "https://data.frpc.io"
     }
   }
 }
