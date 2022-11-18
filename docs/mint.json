@@ -13,6 +13,10 @@
     "ultraDark": "#6A06A5",
     "background": {
       "dark": "#121212"
+    },
+    "anchors": {
+      "from": "#7C34FF",
+      "to": "#FE9195"
     }
   },
   "topbarCtaButton": {
@@ -23,20 +27,12 @@
     {
       "name": "Discord",
       "icon": "discord",
-      "url": "https://loopholelabs.io/discord",
-      "color": {
-        "from": "#7c34ff",
-        "to": "#fe9195"
-      }
+      "url": "https://loopholelabs.io/discord"
     },
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/loopholelabs/frpc-go",
-      "color": {
-        "from": "#7c34ff",
-        "to": "#fe9195"
-      }
+      "url": "https://github.com/loopholelabs/frpc-go"
     }
   ],
   "navigation": [
