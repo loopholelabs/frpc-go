@@ -11,7 +11,9 @@
     "dark": "#9015D9",
     "ultraLight": "#F8EEFE",
     "ultraDark": "#6A06A5",
-    "backgroundDark": "#121212"
+    "background": {
+      "dark": "#121212"
+    }
   },
   "topbarCtaButton": {
     "type": "github",
