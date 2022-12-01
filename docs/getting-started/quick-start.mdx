@@ -77,7 +77,7 @@ message Response{
 
 You can see that we've defined two message types, one for the `Request` and one for the `Response`.
 
-Next, we will define a new `EchoService{:.variable}` in our `proto3` file. This tells the compiler that we want to generate a server and client for this service.
+Next, we will define a new `EchoService` in our `proto3` file. This tells the compiler that we want to generate a server and client for this service.
 
 ```protobuf echo.proto
 option go_package = "/echo";
@@ -129,12 +129,12 @@ type EchoService interface {
 ...
 ```
 
-All we have left to do is implement the `EchoService{:.variable}` interface with our server-side logic,
+All we have left to do is implement the `EchoService` interface with our server-side logic,
 and pass that into the server. The generated library will then be able to handle everything else for us.
 
 # Setting up the Server
 
-To set up our server, we simply need to implement the `EchoService{:.variable}` interface and then start
+To set up our server, we simply need to implement the `EchoService` interface and then start
 the server. We'll start by creating a new `server/main.go` file in our `~/frpc` directory:
 
 ```go server/main.go
@@ -154,8 +154,8 @@ func (s *svc) Echo(_ context.Context, req *echo.Request) (*echo.Response, error)
 }
 ```
 
-As you can see we've created a new struct called `svc{:.variable}` and implemented the `EchoService{:.variable}` interface by
-creating a new function called `Echo{:.function}` which takes a `context.Context` and an `*echo.Request` object.
+As you can see we've created a new struct called `svc` and implemented the `EchoService` interface by
+creating a new function called `Echo` which takes a `context.Context` and an `*echo.Request` object.
 We aren't really using the context in this example so we just ignore that and instead return an `*echo.Response` object with the
 same message as the request.
 
@@ -195,7 +195,7 @@ func main() {
 }
 ```
 
-This additional `main` function runs when the server starts up, and passes in our `svc{:.variable}` struct to the
+This additional `main` function runs when the server starts up, and passes in our `svc` struct to the
 generated `echo.NewServer()` function. It then binds the server to port `:8080` and starts listening for connections.
 
 We're passing in `nil` for both the `*tls.Config` and `logging` parameters in the generated `echo.NewServer()` function because
@@ -298,7 +298,7 @@ and then starts sending a request to the server every second.
 And that's it! We've now set up a simple echo client that can send requests to our server and print out the response.
 
 We were able to use a simple `proto3` file to define our request and response objects, and all we had to do was
-implement the `EchoService{:.variable}` interface. Everything else was handled for us by **fRPC**.
+implement the `EchoService` interface. Everything else was handled for us by **fRPC**.
 
 The complete code for this example is available in the [frpc-echo-example](https://github.com/loopholelabs/frpc-echo-example)
 repository on [Github](https://github.com/loopholelabs).

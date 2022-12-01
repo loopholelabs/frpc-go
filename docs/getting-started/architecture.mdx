@@ -18,12 +18,12 @@ need to be implemented in the application logic - in this case, the code that fR
 
 # Server Architecture
 
-The generated fRPC `Server` is based on the RPC `Services{:.variable}` that are defined in the `proto3`
+The generated fRPC `Server` is based on the RPC `Services` that are defined in the `proto3`
 file that is passed to the `protoc` compiler. Developers are responsible for implementing the generated
-`Service{:.variable}` interfaces and passing that into the `Server` constructor.
+`Service` interfaces and passing that into the `Server` constructor.
 
 The `Server` then takes that implementation and creates a `handler table` that maps the request type to the
-accompanying function in the provided `Service{:.variable}` implementation.
+accompanying function in the provided `Service` implementation.
 
 When it receives a request, it looks up the request type in the `handler table` and calls the accompanying
 function with the deserialized Request object. The function then returns a Response object that
@@ -31,7 +31,7 @@ is serialized and sent back to the `Client`.
 
 # Client Architecture
 
-The generated fRPC `Client` is also based on the RPC `Services{:.variable}` that are defined in the
+The generated fRPC `Client` is also based on the RPC `Services` that are defined in the
 `proto3` file that is passed to the `protoc` compiler. Based on the RPC Calls defined in those services,
 fRPC generates a number of `Client` helper functions - one for each possible RPC Call.
 

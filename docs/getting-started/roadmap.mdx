@@ -11,13 +11,6 @@ you can ask questions and get help from other fRPC developers.
 
 These are the features that are actively being developed right now.
 
-### RPC Streaming Support
-
-RPC Streaming is one of the most important features of fRPC, and it's essential for anyone who wants to switch over from
-gRPC. It allows you to multiple requests or responses without sending multiple RPCs.
-
-This feature is actively being developed and should be available in the next few weeks.
-
 ### Load Balancing Support
 
 One of gRPC's most important features is load balancing. This is a feature that allows you to distribute your requests
@@ -45,14 +38,14 @@ to the [Discord Server](https://loopholelabs.io/discord) so that we can discuss 
 
 ### OneOf Message Types
 
-A recent addition to the proto3 syntax, `OneOf{:.keyword}` message types allow developers to specify that
+A recent addition to the proto3 syntax, `OneOf` message types allow developers to specify that
 only a single field from a set can be used at a time.
 
 This feature is also actively being developed and should be available in the coming months.
 
 ### JS/TS Support
 
-Currently, fRPC is only compatible with `Golang{:.keyword}` but we plan to add support for JS and TS in the near future.
+Currently, fRPC is only compatible with `Golang` but we plan to add support for JS and TS in the near future.
 We know it's important to have an RPC framework that can be used across language boundaries so this is a big priority for us.
 
 We've already begun the work required to add support for JS and TS by porting the [polyglot-go](https://github.com/loopholelabs/polyglot-go)
@@ -61,7 +54,7 @@ deserialize RPCs in Typescript.
 
 ### Rust Support
 
-Currently, fRPC is only compatible with `Golang{:.keyword}` but we plan to add support for Rust in the near future.
+Currently, fRPC is only compatible with `Golang` but we plan to add support for Rust in the near future.
 
 We've already begun the work required to add support for JS and TS by porting the [polyglot-go](https://github.com/loopholelabs/polyglot-go)
 framework to [Rust](https://github.com/loopholelabs/polyglot-rs). This means we are already able to serialize and
