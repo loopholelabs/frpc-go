@@ -37,14 +37,7 @@ func (s svc) Echo(ctx context.Context, request *Request) (*Response, error) {
 }
 
 func (s svc) EchoStream(srv *EchoStreamServer) error {
-	ctx := srv.Context()
 	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
 		request, err := srv.Recv()
 		if err == io.EOF {
 			err = srv.CloseSend()
@@ -85,13 +78,15 @@ func (s svc) Search(req *SearchResponse, srv *SearchServer) error {
 }
 
 func (s svc) Upload(srv *UploadServer) error {
+	println("upload")
 	received := 0
 	for {
 		res, err := srv.Recv()
 		if err == io.EOF {
-			assert.Equal(s.t, 10, received)
-			return srv.CloseSend()
+			assert.Equal(s.t, 11, received)
+			return srv.CloseAndSend(&Response{Message: "Hello World", Test: &Data{}})
 		}
+		received += 1
 		assert.NoError(s.t, err)
 		assert.Equal(s.t, "Hello World", res.Message)
 	}

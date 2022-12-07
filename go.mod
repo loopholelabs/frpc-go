@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/loopholelabs/common v0.4.4
-	github.com/loopholelabs/frisbee-go v0.7.0
-	github.com/loopholelabs/polyglot-go v0.5.0
+	github.com/loopholelabs/frisbee-go v0.7.1
+	github.com/loopholelabs/polyglot-go v0.5.1
 	github.com/loopholelabs/testing v0.2.3
 	github.com/rs/zerolog v1.28.0
 	github.com/stretchr/testify v1.8.0

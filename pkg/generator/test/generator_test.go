@@ -42,31 +42,19 @@ func TestRPC(t *testing.T) {
 	go server.ServeConn(sConn)
 
 	t.Run("Synchronous Request", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testSynchronous(client, t)
-		}()
+		testSynchronous(client, t)
 	})
 
 	t.Run("Bi-directional Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testBidirectional(client, t)
-		}()
+		testBidirectional(client, t)
 	})
 
 	t.Run("Server Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testServerStreaming(client, t)
-		}()
+		testServerStreaming(client, t)
 	})
 
 	t.Run("Client Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testClientStreaming(client, t)
-		}()
+		testClientStreaming(client, t)
 	})
 }
 
@@ -142,6 +130,7 @@ func testServerStreaming(client *Client, t *testing.T) {
 }
 
 func testClientStreaming(client *Client, t *testing.T) {
+	println("attempting upload")
 	ctx := context.Background()
 	data := &Data{Message: "Hello World", Checker: Potato}
 	stream, err := client.EchoService.Upload(ctx, data)
@@ -151,6 +140,8 @@ func testClientStreaming(client *Client, t *testing.T) {
 		err := stream.Send(data)
 		assert.NoError(t, err)
 	}
-	err = stream.CloseSend()
+	res, err := stream.CloseAndRecv()
+	println("client received response")
 	assert.NoError(t, err)
+	assert.Equal(t, "Hello World", res.Message)
 }
