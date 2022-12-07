@@ -42,31 +42,19 @@ func TestRPC(t *testing.T) {
 	go server.ServeConn(sConn)
 
 	t.Run("Synchronous Request", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testSynchronous(client, t)
-		}()
+		testSynchronous(client, t)
 	})
 
 	t.Run("Bi-directional Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testBidirectional(client, t)
-		}()
+		testBidirectional(client, t)
 	})
 
 	t.Run("Server Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testServerStreaming(client, t)
-		}()
+		testServerStreaming(client, t)
 	})
 
 	t.Run("Client Stream", func(t *testing.T) {
-		t.Parallel()
-		go func() {
-			testClientStreaming(client, t)
-		}()
+		testClientStreaming(client, t)
 	})
 }
 
@@ -151,6 +139,7 @@ func testClientStreaming(client *Client, t *testing.T) {
 		err := stream.Send(data)
 		assert.NoError(t, err)
 	}
-	err = stream.CloseSend()
+	res, err := stream.CloseAndRecv()
 	assert.NoError(t, err)
+	assert.Equal(t, "Hello World", res.Message)
 }

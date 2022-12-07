@@ -5,15 +5,15 @@
          client *frisbee.Client
          {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
              {{ $method := $service.Methods.Get $i -}}
+             {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
              next{{ CamelCaseName $method.Name }} uint16
              next{{ CamelCaseName $method.Name }}Mu sync.RWMutex
-             {{ if $method.IsStreamingServer -}}
-             inflight{{ CamelCaseName $method.Name }} map[uint16]*{{ CamelCaseName $method.Name }}Client
-             {{ else -}}
              inflight{{ CamelCaseName $method.Name }} map[uint16]chan *{{ CamelCase $method.Output.FullName }}
-             {{ end -}}
              inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
+             {{ end -}}
          {{end -}}
+        nextStreamingID uint16
+        nextStreamingIDMu sync.RWMutex
     }
 {{end -}}
 
@@ -50,17 +50,23 @@ func NewClient (tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error) 
         c.{{ CamelCaseName $service.Name }}.client = c.Client
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
+                {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
                 c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }}Mu.Lock()
                 c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }} = 0
                 c.{{ CamelCaseName $service.Name }}.next{{ CamelCaseName $method.Name }}Mu.Unlock()
-                {{ if $method.IsStreamingServer -}}
-                c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]*{{ CamelCaseName $method.Name }}Client)
-                {{ else -}}
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }} = make(map[uint16]chan *{{ CamelCase $method.Output.FullName }})
                 {{ end -}}
         {{end -}}
     {{end -}}
     return c, nil
+}
+
+func (c *Client) Connect(addr string, streamHandler ...frisbee.NewStreamHandler) error {
+    return c.Client.Connect(addr, func (stream *frisbee.Stream) { })
+}
+
+func (c *Client) FromConn(conn net.Conn, streamHandler ...frisbee.NewStreamHandler) error {
+    return c.Client.FromConn(conn, func (stream *frisbee.Stream) { })
 }
 
 {{template "clientmethods" .services }}
@@ -85,26 +91,9 @@ func (e CloseError) Error() string {
     {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
         {{ $method := $service.Methods.Get $i -}}
         {{ $count := call $counter -}}
+
+        {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
         table[{{ $count }}] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
-            {{ if $method.IsStreamingServer -}}
-            res := New{{ CamelCase $method.Output.FullName }}()
-            err := res.Decode(*incoming.Content)
-            if err == nil {
-                c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RLock()
-                if stream, ok := c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
-                    c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
-                    err := stream.received.Push(res)
-                    if HasCloseFlag(res.flags) {
-                        stream.close()
-                    }
-                    if err != nil {
-                        return nil, 0
-                    }
-                } else {
-                    c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
-                }
-            }
-            {{ else -}}
             c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RLock()
             if ch, ok := c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
@@ -114,9 +103,9 @@ func (e CloseError) Error() string {
             } else {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
             }
-            {{ end -}}
             return
         }
+        {{ end -}}
     {{end -}}
 {{end -}}
 {{ end -}}
@@ -130,169 +119,96 @@ func (e CloseError) Error() string {
         {{ $opIndex := call $counter -}}
         {{if or $method.IsStreamingClient $method.IsStreamingServer -}}
             func (c *sub{{ CamelCaseName $service.Name }}Client) {{ CamelCaseName $method.Name }}(ctx context.Context, req *{{ CamelCase $method.Input.FullName }}) (*{{ CamelCaseName $method.Name }}Client, error) {
-            p := packet.Get()
-            p.Metadata.Operation = {{ $opIndex }}
-
-            c.next{{ CamelCaseName $method.Name }}Mu.Lock()
-            c.next{{ CamelCaseName $method.Name }} += 1
-            id := c.next{{ CamelCaseName $method.Name }}
-            c.next{{ CamelCaseName $method.Name }}Mu.Unlock()
-            p.Metadata.Id = id
-
-            req.Encode(p.Content)
-            p.Metadata.ContentLength = uint32(len(*p.Content))
-            err := c.client.WritePacket(p)
-
-            {{ if $method.IsStreamingServer -}}
-                q := queue.NewCircular[{{ CamelCase $method.Output.FullName }}, *{{ CamelCase $method.Output.FullName }}](100)
-                stale := make([]*{{ CamelCase $method.Output.FullName }}, 0)
-                staleMu := sync.Mutex{}
-            {{ end -}}
-
-            if err != nil {
-            packet.Put(p)
-            return nil, err
-            }
-            packet.Put(p)
-
-            stream := {{ CamelCaseName $method.Name }}Client{
-            context: ctx,
-            closed: atomic.NewBool(false),
-            {{ if $method.IsStreamingServer -}}
-                received: q,
-            {{ end -}}
-            }
-            {{ if $method.IsStreamingServer -}}
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-                c.inflight{{ CamelCaseName $method.Name }}[id] = &stream
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
-
-                stream.recv = func() (*{{ CamelCase $method.Output.FullName }}, error) {
-                if stream.closed.Load() {
-                staleMu.Lock()
-                if len(stale) > 0 {
-                var r *{{ $method.Output.FullName }}
-                r, stale = stale[0], stale[1:]
-                staleMu.Unlock()
-                return r, nil
-                }
-                staleMu.Unlock()
-                return nil, io.EOF
-                } else if c.client.Closed() {
-                stream.close()
-                }
-
-                readPacket, err := q.Pop()
-                if err != nil {
-                if stream.closed.Load() {
-                staleMu.Lock()
-                if len(stale) > 0 {
-                var r *{{ $method.Output.FullName }}
-                r, stale = stale[0], stale[1:]
-                staleMu.Unlock()
-                if errors.Is(r.error, io.EOF) {
-                return nil, io.EOF
-                }
-                return r, nil
-                }
-                staleMu.Unlock()
-                }
-                return nil, io.EOF
-                }
-                if errors.Is(readPacket.error, io.EOF) {
-                return nil, io.EOF
-                }
-                return readPacket, nil
-                }
-                stream.close = func () {
-                if stream.closed.Load() {
-                return
-                }
-                staleMu.Lock()
-                stream.closed.Store(true)
-                stale = q.Drain()
-                staleMu.Unlock()
-                q.Close()
-                }
-            {{ else if $method.IsStreamingClient }}
-                ch := make(chan *{{ CamelCase $method.Output.FullName }}, 1)
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-                c.inflight{{ CamelCaseName $method.Name }}[id] = ch
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
-
-                stream.recv = func () (res *{{ CamelCase $method.Output.FullName }}, err error) {
-                select {
-                case res = <- ch:
-                err = res.error
-                case <- ctx.Done():
-                err = ctx.Err()
-                }
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-                delete(c.inflight{{ CamelCaseName $method.Name }}, id)
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
-                return
-                }
-            {{ end -}}
-
-            {{ if $method.IsStreamingClient -}}
-                stream.send = func (m *{{ CamelCase $method.Input.FullName }}) error {
                 p := packet.Get()
-                p.Metadata.Operation = {{ $opIndex }}
 
-                p.Metadata.Id = id
+                c.nextStreamingIDMu.Lock()
+                c.nextStreamingID += 1
+                id := c.nextStreamingID
+                c.nextStreamingIDMu.Unlock()
 
-                m.Encode(p.Content)
+                open := &RPCStreamOpen{operation: {{ $opIndex}}};
+
+                open.Encode(p.Content)
                 p.Metadata.ContentLength = uint32(len(*p.Content))
-                err := c.client.WritePacket(p)
-                if err != nil {
-                packet.Put(p)
-                return err
+
+                fStream := c.client.Stream(id)
+                fStream.WritePacket(p)
+
+                if req != nil {
+                    p2 := packet.Get()
+                    req.Encode(p2.Content)
+                    p2.Metadata.ContentLength = uint32(len(*p2.Content))
+                    fStream.WritePacket(p2)
                 }
-                packet.Put(p)
-                return nil
+
+                stream := {{ CamelCaseName $method.Name }}Client{
+                    context: ctx,
+                    stream: fStream,
+                    closed: atomic.NewBool(false),
                 }
-            {{ end -}}
-            go func () {
-            <-ctx.Done()
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
-                delete(c.inflight{{ CamelCaseName $method.Name }}, id)
-                c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
-            }()
-            return &stream, nil
+
+                stream.recv = func () (*{{ CamelCase $method.Output.FullName }}, error) {
+                    p, err := stream.stream.ReadPacket()
+                    if err != nil {
+                        return nil, err
+                    }
+
+                    res := New{{ CamelCase $method.Output.FullName }}()
+                    err = res.Decode(*p.Content)
+                    if err != nil {
+                        return nil, err
+                    }
+                    if errors.Is(res.error, io.EOF) {
+                        return nil, io.EOF
+                    }
+
+                    return res, nil
+                }
+
+                stream.close = func () {
+                    stream.stream.Close()
+                }
+                stream.send = func (m *{{ CamelCase $method.Input.FullName }}) error {
+                    p := packet.Get()
+
+                    m.Encode(p.Content)
+                    p.Metadata.ContentLength = uint32(len(*p.Content))
+                    return stream.stream.WritePacket(p)
+                }
+                return &stream, nil
             }
 
             type {{ CamelCaseName $method.Name }}Client struct {
-            context context.Context
-            recv func() (*{{ CamelCase $method.Output.FullName }}, error)
-            close func()
-            closed *atomic.Bool
+                context context.Context
+                recv func() (*{{ CamelCase $method.Output.FullName }}, error)
+                close func()
+                closed *atomic.Bool
 
-            {{ if $method.IsStreamingClient -}}
+                stream *frisbee.Stream
                 send func (*{{ CamelCase $method.Input.FullName }}) error
-            {{ end -}}
-            received *queue.Circular[{{ CamelCase $method.Output.FullName }}, *{{ CamelCase $method.Output.FullName }}]
             }
 
             {{ if $method.IsStreamingServer -}}
-                func (x *{{ CamelCaseName $method.Name }}Client) Recv() (*{{ CamelCase $method.Output.FullName }}, error) {
+            func (x *{{ CamelCaseName $method.Name }}Client) Recv() (*{{ CamelCase $method.Output.FullName }}, error) {
                 return x.recv()
-                }
+            }
             {{ end -}}
 
             {{ if $method.IsStreamingClient -}}
                 func (x *{{ CamelCaseName $method.Name }}Client) Send(m *{{ CamelCase $method.Input.FullName }}) error {
-                return x.send(m)
+                    return x.send(m)
                 }
 
                 func (x *{{ CamelCaseName $method.Name }}Client) CloseSend() error {
-                r := {{ CamelCase $method.Input.FullName }}{error: io.EOF, flags: SetCloseFlag(0, true) }
-                return x.Send(&r)
+                    return x.send(&{{ CamelCase $method.Input.FullName }}{error: io.EOF})
                 }
 
                 func (x *{{ CamelCaseName $method.Name }}Client) CloseAndRecv() (*{{ CamelCase $method.Output.FullName }}, error) {
-                r := {{ CamelCase $method.Input.FullName }}{error: io.EOF, flags: SetCloseFlag(0, true) }
-                x.Send(&r)
-                return x.recv()
+                    err := x.send(&{{ CamelCase $method.Input.FullName }}{error: io.EOF})
+                    if err != nil {
+                        return nil, err
+                    }
+                    return x.recv()
                 }
             {{ end -}}
         {{else -}}
