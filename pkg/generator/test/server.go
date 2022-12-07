@@ -78,7 +78,6 @@ func (s svc) Search(req *SearchResponse, srv *SearchServer) error {
 }
 
 func (s svc) Upload(srv *UploadServer) error {
-	println("upload")
 	received := 0
 	for {
 		res, err := srv.Recv()

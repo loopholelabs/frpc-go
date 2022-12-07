@@ -130,7 +130,6 @@ func testServerStreaming(client *Client, t *testing.T) {
 }
 
 func testClientStreaming(client *Client, t *testing.T) {
-	println("attempting upload")
 	ctx := context.Background()
 	data := &Data{Message: "Hello World", Checker: Potato}
 	stream, err := client.EchoService.Upload(ctx, data)
@@ -141,7 +140,6 @@ func testClientStreaming(client *Client, t *testing.T) {
 		assert.NoError(t, err)
 	}
 	res, err := stream.CloseAndRecv()
-	println("client received response")
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", res.Message)
 }
