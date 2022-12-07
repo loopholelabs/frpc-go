@@ -33,6 +33,7 @@ var (
 
 	streamMethodImports = []string{
 		"go.uber.org/atomic",
+		"io",
 	}
 
 	methodImports = []string{
