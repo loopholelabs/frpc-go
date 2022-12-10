@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.7.2] - 2022-12-10
+
+### Fixes
+
+- Fixed a bug where stream handlers would be generated for a proto file without streams
+
 ## [v0.7.1] - 2022-12-10
 
 ### Changes
@@ -47,7 +53,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 > Changelogs for [v0.5.0] and before can be found at https://github.com/loopholelabs/frisbee-go
 
-[unreleased]: https://github.com/loopholelabs/frpc-go/compare/v0.7.1...HEAD
+[unreleased]: https://github.com/loopholelabs/frpc-go/compare/v0.7.2...HEAD
+[v0.7.2]: https://github.com/loopholelabs/frpc-go/releases/tag/v0.7.2
 [v0.7.1]: https://github.com/loopholelabs/frpc-go/releases/tag/v0.7.1
 [v0.7.0]: https://github.com/loopholelabs/frpc-go/releases/tag/v0.7.0
 [v0.6.0]: https://github.com/loopholelabs/frpc-go/releases/tag/v0.6.0
