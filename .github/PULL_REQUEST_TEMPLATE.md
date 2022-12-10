@@ -22,12 +22,6 @@ and if required please add new test cases and list them below:
 - [ ] Test A
 - [ ] Test B
 
-## Linting
-
-Please make sure you've run the following and fixed any issues that arise:
-
-- [ ] `trunk check` has been run
-
 ## Final Checklist:
 
 - [ ] My code follows the style guidelines of this project
