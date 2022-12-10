@@ -7,6 +7,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [v0.7.1] - 2022-12-10
+
+### Changes
+
+- Fixed a bug when generating fRPC with streams where sometimes stream messages would be received out of order. 
+
 ## [v0.7.0] - 2022-09-28
 
 ### Features
