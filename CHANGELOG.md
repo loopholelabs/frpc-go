@@ -11,15 +11,16 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changes
 
-- Fixed a bug when generating fRPC with streams where sometimes stream messages would be received out of order. 
+- Fixed a bug when generating fRPC with streams where sometimes stream messages would be received out of order.
+- Removed the Trunk linter
 
 ## [v0.7.0] - 2022-09-28
 
 ### Features
 
 - fRPC now uses the `VarInt` encoding format under the hood (added in [polyglot-go v0.5.0](https://github.com/loopholelabs/polyglot-go)) which should help reduce the number of bytes an RPC call is serialized to
-- A new `CloseError` type has been added which, when returned by an RPC call, causes the connection to be closed after the message is written. This can be useful for authentication or connection management. 
-- Streaming is now available! The API matches gRPC's so it should be a drop-in replacement! 
+- A new `CloseError` type has been added which, when returned by an RPC call, causes the connection to be closed after the message is written. This can be useful for authentication or connection management.
+- Streaming is now available! The API matches gRPC's so it should be a drop-in replacement!
 
 ### Changes
 
