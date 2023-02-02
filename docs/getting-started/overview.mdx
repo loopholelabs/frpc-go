@@ -6,7 +6,7 @@ title: Overview
 [Apache Thrift](https://thrift.apache.org/)) that's designed from the ground up to be lightweight, extensible, and extremely performant.
 
 We built <Tooltip tip="Frisbee RPC">fRPC</Tooltip> because we loved the idea of defining our message types in a standardized
-[proto3](https://developers.google.com/protocol-buffers/docs/proto3) format and having the [protobuf](https://github.com/protocolbuffers/protobuf) compiler generate all the necessary
+[proto3](https://protobuf.dev/programming-guides/proto3/) format and having the [protobuf](https://github.com/protocolbuffers/protobuf) compiler generate all the necessary
 glue code for us, but we didn't like the [overhead](https://github.com/boguslaw-wojcik/encoding-benchmarks) of encoding and decoding
 messages in the <Tooltip tip="Data format used to serialize structured data">Protobuf</Tooltip> format, and wanted a wire protocol that was lighter and faster
 than <Tooltip tip="Wire format used for gRPC">HTTP\/2</Tooltip>.
