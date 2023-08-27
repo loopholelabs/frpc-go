@@ -18,14 +18,14 @@ package main
 
 import (
 	"github.com/loopholelabs/frpc-go/pkg/generator"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
 func main() {
 	gen := generator.New()
 
-	data, err := ioutil.ReadAll(os.Stdin)
+	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		panic(err)
 	}
