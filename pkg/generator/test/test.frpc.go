@@ -5,7 +5,7 @@ package test
 
 import (
 	"errors"
-	"github.com/loopholelabs/polyglot-go"
+	"github.com/loopholelabs/polyglot"
 	"net"
 
 	"context"
