@@ -17,9 +17,10 @@
 package main
 
 import (
-	"github.com/loopholelabs/frpc-go/pkg/generator"
 	"io"
 	"os"
+
+	"github.com/loopholelabs/frpc-go/pkg/generator"
 )
 
 func main() {

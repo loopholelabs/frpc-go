@@ -17,9 +17,10 @@
 package generator
 
 import (
+	"strings"
+
 	"github.com/loopholelabs/polyglot/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"strings"
 )
 
 func getServerFields(services protoreflect.ServiceDescriptors) string {

@@ -18,15 +18,17 @@ package generator
 
 import (
 	"bytes"
-	"github.com/loopholelabs/frpc-go/internal/version"
-	"github.com/loopholelabs/frpc-go/templates"
+	"text/template"
+
 	generator "github.com/loopholelabs/polyglot/generator/golang"
 	"github.com/loopholelabs/polyglot/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/pluginpb"
-	"text/template"
+
+	"github.com/loopholelabs/frpc-go/internal/version"
+	"github.com/loopholelabs/frpc-go/templates"
 )
 
 type Generator struct {
@@ -116,22 +118,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		}
 
 		numServices := f.Desc.Services().Len()
-
-		numMethods := 0
-		streamMethods = make(map[protoreflect.FullName]bool)
-		for i := 0; i < numServices; i++ {
-			nM := f.Desc.Services().Get(i).Methods().Len()
-			numMethods += nM
-			for m := 0; m < nM; m++ {
-				method := f.Desc.Services().Get(i).Methods().Get(m)
-				if method.IsStreamingClient() {
-					streamMethods[method.Input().FullName()] = true
-				}
-				if method.IsStreamingServer() {
-					streamMethods[method.Output().FullName()] = true
-				}
-			}
-		}
+		numStreamMethods, numMethods := extractNumberOfMethods(f)
 
 		err = templ.ExecuteTemplate(genFile, "prebase.templ", map[string]interface{}{
 			"pluginVersion":       version.Version,
@@ -143,7 +130,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			"streamMethodImports": streamMethodImports,
 			"numServices":         numServices,
 			"numMethods":          numMethods,
-			"numStreamMethods":    len(streamMethods),
+			"numStreamMethods":    numStreamMethods,
 		})
 		if err != nil {
 			return nil, err
@@ -160,7 +147,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			"services":         f.Desc.Services(),
 			"numServices":      numServices,
 			"numMethods":       numMethods,
-			"numStreamMethods": len(streamMethods),
+			"numStreamMethods": numStreamMethods,
 		})
 		if err != nil {
 			return nil, err
@@ -168,4 +155,25 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 	}
 
 	return plugin.Response(), nil
+}
+
+func extractNumberOfMethods(f *protogen.File) (int, int) {
+	numServices := f.Desc.Services().Len()
+	numMethods := 0
+	streamMethods = make(map[protoreflect.FullName]bool)
+	for i := 0; i < numServices; i++ {
+		nM := f.Desc.Services().Get(i).Methods().Len()
+		numMethods += nM
+		for m := 0; m < nM; m++ {
+			method := f.Desc.Services().Get(i).Methods().Get(m)
+			if method.IsStreamingClient() {
+				streamMethods[method.Input().FullName()] = true
+			}
+			if method.IsStreamingServer() {
+				streamMethods[method.Output().FullName()] = true
+			}
+		}
+	}
+
+	return len(streamMethods), numMethods
 }

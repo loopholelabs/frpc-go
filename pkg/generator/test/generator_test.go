@@ -18,10 +18,11 @@ package test
 
 import (
 	"context"
-	"github.com/loopholelabs/testing/conn/pair"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
+
+	"github.com/loopholelabs/testing/conn/pair"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRPC(t *testing.T) {
@@ -84,7 +85,7 @@ func testBidirectional(client *Client, t *testing.T) {
 	roundtrips := 0
 	for {
 		res, err := stream.Recv()
-		roundtrips += 1
+		roundtrips++
 		assert.NoError(t, err, "Request error")
 		assert.Equal(t, "Hello World", res.Message)
 		assert.Equal(t, "Hello World", res.Test.Message)
@@ -121,7 +122,7 @@ func testServerStreaming(client *Client, t *testing.T) {
 			assert.Equal(t, 10, received)
 			break
 		}
-		received += 1
+		received++
 		assert.NoError(t, err)
 		assert.Equal(t, "Hello World", res.Message)
 		assert.Equal(t, "Hello World", res.Test.Message)
