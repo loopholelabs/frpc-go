@@ -16,6 +16,9 @@
 
 package version
 
-const (
-	Version = "v0.7.1"
+import (
+	_ "embed"
 )
+
+//go:embed current_version
+var Version string
