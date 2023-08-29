@@ -18,16 +18,17 @@ package test
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type svc struct {
 	t *testing.T
 }
 
-func (s svc) Echo(ctx context.Context, request *Request) (*Response, error) {
+func (s svc) Echo(_ context.Context, request *Request) (*Response, error) {
 	assert.Equal(s.t, "Hello World", request.Message)
 	assert.Equal(s.t, RequestUNIVERSAL, request.Corpus)
 	return &Response{Message: "Hello World", Test: &Data{
@@ -61,7 +62,7 @@ func (s svc) EchoStream(srv *EchoStreamServer) error {
 	return nil
 }
 
-func (s svc) Testy(ctx context.Context, response *SearchResponse) (*StockPricesWrapper, error) {
+func (s svc) Testy(_ context.Context, _ *SearchResponse) (*StockPricesWrapper, error) {
 	panic("not implemented")
 }
 
@@ -85,7 +86,7 @@ func (s svc) Upload(srv *UploadServer) error {
 			assert.Equal(s.t, 11, received)
 			return srv.CloseAndSend(&Response{Message: "Hello World", Test: &Data{}})
 		}
-		received += 1
+		received++
 		assert.NoError(s.t, err)
 		assert.Equal(s.t, "Hello World", res.Message)
 	}
