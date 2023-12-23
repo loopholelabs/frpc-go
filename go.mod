@@ -2,10 +2,8 @@ module github.com/loopholelabs/frpc-go
 
 go 1.20
 
-replace github.com/loopholelabs/frisbee-go => github.com/asalvi0/frisbee-go v0.0.0-20231219194320-a706803e302c
-
 require (
-	github.com/loopholelabs/frisbee-go v0.7.2
+	github.com/loopholelabs/frisbee-go v0.2.1-0.20231223042112-51a402662297
 	github.com/loopholelabs/polyglot v1.1.4
 	github.com/loopholelabs/testing v0.2.3
 	github.com/rs/zerolog v1.31.0

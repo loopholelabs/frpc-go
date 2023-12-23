@@ -1,5 +1,3 @@
-github.com/asalvi0/frisbee-go v0.0.0-20231219194320-a706803e302c h1:l6pq6oi+TQ6Z/s86CfhqJ+eknQYUHN4CI2hqjMcOqwA=
-github.com/asalvi0/frisbee-go v0.0.0-20231219194320-a706803e302c/go.mod h1:0RFgaeAsDYnTXJbfi2fpqMNpPjphtqwn4G5kb/iNJLc=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -9,6 +7,8 @@ github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/loopholelabs/common v0.4.9 h1:9MPUYlZZ/qx3Kt8LXgXxcSXthrM91od8026c4DlGpAU=
 github.com/loopholelabs/common v0.4.9/go.mod h1:Wop5srN1wYT+mdQ9gZ+kn2I9qKAyVd0FB48pThwIa9M=
+github.com/loopholelabs/frisbee-go v0.2.1-0.20231223042112-51a402662297 h1:oQsACix1xLuO7eIaKUDBN5zYyqUPcLQdRs2yMw+sLaQ=
+github.com/loopholelabs/frisbee-go v0.2.1-0.20231223042112-51a402662297/go.mod h1:0RFgaeAsDYnTXJbfi2fpqMNpPjphtqwn4G5kb/iNJLc=
 github.com/loopholelabs/polyglot v1.1.4 h1:+yCGD3MQnmmX5ln+9mCbSCUgH7GQH0RxKJn/54hAaQU=
 github.com/loopholelabs/polyglot v1.1.4/go.mod h1:EA88BEkIluKHAWxhyOV88xXz68YkRdo9IzZ+1dj+7Ao=
 github.com/loopholelabs/testing v0.2.3 h1:4nVuK5ctaE6ua5Z0dYk2l7xTFmcpCYLUeGjRBp8keOA=
