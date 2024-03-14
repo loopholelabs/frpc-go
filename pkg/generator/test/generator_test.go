@@ -18,6 +18,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"testing"
 
@@ -139,6 +140,7 @@ func testClientStreaming(client *Client, t *testing.T) {
 	for i := 0; i < 10; i++ {
 		err := stream.Send(data)
 		assert.NoError(t, err)
+        fmt.Println("Sent data")
 	}
 	res, err := stream.CloseAndRecv()
 	assert.NoError(t, err)
