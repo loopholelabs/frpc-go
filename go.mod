@@ -1,6 +1,6 @@
 module github.com/loopholelabs/frpc-go
 
-go 1.18
+go 1.20
 
 require (
 	github.com/loopholelabs/frisbee-go v0.7.3
