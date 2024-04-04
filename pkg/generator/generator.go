@@ -18,6 +18,7 @@ package generator
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	generator "github.com/loopholelabs/polyglot/generator/golang"
@@ -121,7 +122,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		numStreamMethods, numMethods := extractNumberOfMethods(f)
 
 		err = templ.ExecuteTemplate(genFile, "prebase.templ", map[string]interface{}{
-			"pluginVersion":       version.Version,
+			"pluginVersion":       strings.TrimSpace(version.Version),
 			"sourcePath":          f.Desc.Path(),
 			"package":             packageName,
 			"requiredImports":     requiredImports,
