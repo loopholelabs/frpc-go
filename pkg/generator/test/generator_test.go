@@ -18,6 +18,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"testing"
 
@@ -106,7 +107,7 @@ func testServerStreaming(client *Client, t *testing.T) {
 	ctx := context.Background()
 	search := NewSearchResponse()
 	search.Results = []*SearchResponseResult{
-		&SearchResponseResult{
+		{
 			Url:      "https://google.com",
 			Title:    "Google",
 			Snippets: []string{},
@@ -137,6 +138,7 @@ func testClientStreaming(client *Client, t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := 0; i < 10; i++ {
+        fmt.Println("Sending data")
 		err := stream.Send(data)
 		assert.NoError(t, err)
 	}

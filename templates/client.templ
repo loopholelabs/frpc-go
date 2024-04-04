@@ -98,7 +98,7 @@ func (e CloseError) Error() string {
             if ch, ok := c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
                 res := New{{ CamelCase $method.Output.FullName }}()
-                res.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
+                res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
                 ch <- res
             } else {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
@@ -129,7 +129,7 @@ func (e CloseError) Error() string {
                 open := &RPCStreamOpen{operation: {{ $opIndex}}};
 
                 open.Encode(p.Content)
-                p.Metadata.ContentLength = uint32(len(*p.Content))
+                p.Metadata.ContentLength = uint32((*p.Content).Len())
 
                 fStream := c.client.Stream(id)
                 fStream.WritePacket(p)
@@ -137,7 +137,7 @@ func (e CloseError) Error() string {
                 if req != nil {
                     p2 := packet.Get()
                     req.Encode(p2.Content)
-                    p2.Metadata.ContentLength = uint32(len(*p2.Content))
+                    p2.Metadata.ContentLength = uint32((*p2.Content).Len())
                     fStream.WritePacket(p2)
                 }
 
@@ -154,7 +154,7 @@ func (e CloseError) Error() string {
                     }
 
                     res := New{{ CamelCase $method.Output.FullName }}()
-                    err = res.Decode(*p.Content)
+                    err = res.Decode((*p.Content).Bytes())
                     if err != nil {
                         return nil, err
                     }
@@ -172,7 +172,7 @@ func (e CloseError) Error() string {
                     p := packet.Get()
 
                     m.Encode(p.Content)
-                    p.Metadata.ContentLength = uint32(len(*p.Content))
+                    p.Metadata.ContentLength = uint32((*p.Content).Len())
                     return stream.stream.WritePacket(p)
                 }
                 return &stream, nil
@@ -224,7 +224,7 @@ func (e CloseError) Error() string {
             p.Metadata.Id = id
 
             req.Encode(p.Content)
-            p.Metadata.ContentLength = uint32(len(*p.Content))
+            p.Metadata.ContentLength = uint32((*p.Content).Len())
             c.inflight{{ CamelCaseName $method.Name }}Mu.Lock()
             c.inflight{{ CamelCaseName $method.Name }}[id] = ch
             c.inflight{{ CamelCaseName $method.Name }}Mu.Unlock()
