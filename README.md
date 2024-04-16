@@ -6,7 +6,7 @@
 This is the [Go](http://golang.org) implementation of [fRPC](https://frpc.io), a modern RPC framework
 designed for high performance and stability, that uses the [frisbee-go](https://github.com/loopholelabs/frisbee-go) messaging framework under the hood.
 
-**This library requires Go1.18 or later.**
+**This library requires Go1.20 or later.**
 
 ## Important note about releases and stability
 
