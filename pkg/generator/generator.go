@@ -21,8 +21,8 @@ import (
 	"strings"
 	"text/template"
 
-	generator "github.com/loopholelabs/polyglot/generator/golang"
-	"github.com/loopholelabs/polyglot/utils"
+	generator "github.com/loopholelabs/polyglot/v2/generator/golang"
+	"github.com/loopholelabs/polyglot/v2/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
