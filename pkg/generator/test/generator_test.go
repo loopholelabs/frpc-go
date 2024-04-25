@@ -106,7 +106,7 @@ func testServerStreaming(client *Client, t *testing.T) {
 	ctx := context.Background()
 	search := NewSearchResponse()
 	search.Results = []*SearchResponseResult{
-		&SearchResponseResult{
+		{
 			Url:      "https://google.com",
 			Title:    "Google",
 			Snippets: []string{},

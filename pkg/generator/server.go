@@ -19,7 +19,7 @@ package generator
 import (
 	"strings"
 
-	"github.com/loopholelabs/polyglot/utils"
+	"github.com/loopholelabs/polyglot/v2/utils"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 

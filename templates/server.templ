@@ -15,14 +15,13 @@ func (x *RPCStreamOpen) Encode(b *polyglot.Buffer) {
 
 func (x *RPCStreamOpen) Decode(b []byte) error {
     if x == nil {
-        return NilDecode
+        return ErrDecodeNil
     }
-    d := polyglot.GetDecoder(b)
-    defer d.Return()
+    d := polyglot.Decoder(b)
     return x.decode(d)
 }
 
-func (x *RPCStreamOpen) decode(d *polyglot.Decoder) error {
+func (x *RPCStreamOpen) decode(d *polyglot.BufferDecoder) error {
     var err error
     x.operation, err = d.Uint16()
     return err
@@ -59,7 +58,7 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *z
             return
         }
         open := &RPCStreamOpen{}
-        err = open.Decode(*p.Content)
+        err = open.Decode((*p.Content).Bytes())
         if err != nil {
             stream.Close()
             return
@@ -138,7 +137,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                             }
 
                             res := New{{ CamelCase $method.Input.FullName }}()
-                            err = res.Decode(*p.Content)
+                            err = res.Decode((*p.Content).Bytes())
                             if err != nil {
                                 return nil, err
                             }
@@ -154,7 +153,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                         p := packet.Get()
 
                         m.Encode(p.Content)
-                        p.Metadata.ContentLength = uint32(len(*p.Content))
+                        p.Metadata.ContentLength = uint32((*p.Content).Len())
                         return srv.stream.WritePacket(p)
                     }
 
@@ -164,7 +163,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                         return
                     }
                     req := New{{ CamelCase $method.Input.FullName  }}()
-                    err = req.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
+                    err = req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
                     {{ end -}}
 
                     go func() {
@@ -194,7 +193,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                     } else {
                         res.Encode(outgoing.Content)
                     }
-                    outgoing.Metadata.ContentLength = uint32(len(*outgoing.Content))
+                    outgoing.Metadata.ContentLength = uint32((*outgoing.Content).Len())
                 {{end -}}
                 }
 
@@ -242,7 +241,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
             {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
             table[{{ $count }}] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
                 req := New{{ CamelCase $method.Input.FullName  }}()
-                err := req.Decode((*incoming.Content)[:incoming.Metadata.ContentLength])
+                err := req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
                 if err == nil {
                     var res *{{ CamelCase $method.Output.FullName }}
                     outgoing = incoming
@@ -256,7 +255,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                     } else {
                         res.Encode(outgoing.Content)
                     }
-                    outgoing.Metadata.ContentLength = uint32(len(*outgoing.Content))
+                    outgoing.Metadata.ContentLength = uint32(outgoing.Content.Len())
                 }
                 return
             }

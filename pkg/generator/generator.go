@@ -18,10 +18,11 @@ package generator
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
-	generator "github.com/loopholelabs/polyglot/generator/golang"
-	"github.com/loopholelabs/polyglot/utils"
+	generator "github.com/loopholelabs/polyglot/v2/generator/golang"
+	"github.com/loopholelabs/polyglot/v2/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -121,7 +122,7 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 		numStreamMethods, numMethods := extractNumberOfMethods(f)
 
 		err = templ.ExecuteTemplate(genFile, "prebase.templ", map[string]interface{}{
-			"pluginVersion":       version.Version,
+			"pluginVersion":       strings.TrimSpace(version.Version),
 			"sourcePath":          f.Desc.Path(),
 			"package":             packageName,
 			"requiredImports":     requiredImports,

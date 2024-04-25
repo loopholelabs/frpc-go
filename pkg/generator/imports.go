@@ -19,7 +19,7 @@ package generator
 var (
 	requiredImports = []string{
 		"errors",
-		"github.com/loopholelabs/polyglot",
+		"github.com/loopholelabs/polyglot/v2",
 		"net",
 	}
 
