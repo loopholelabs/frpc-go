@@ -35,7 +35,7 @@ Example `Proto3` files can be found [here](/examples).
 
 Bug reports and pull requests are welcome on GitHub at [https://github.com/loopholelabs/frpc-go][gitrepo]. For more
 contribution information check
-out [the contribution guide](https://github.com/loopholelabs/frpc-go/blob/master/CONTRIBUTING.md).
+out [the contribution guide](https://github.com/loopholelabs/frpc-go/blob/main/CONTRIBUTING.md).
 
 ## License
 
@@ -44,7 +44,7 @@ the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Code of Conduct
 
-Everyone interacting in the Frisbee project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
+Everyone interacting in the Frisbee project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md).
 
 ## Project Managed By:
 
