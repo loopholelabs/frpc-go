@@ -16,7 +16,7 @@
 
 package generator
 
-import "github.com/loopholelabs/polyglot/utils"
+import "github.com/loopholelabs/polyglot/v2/utils"
 
 const extension = ".frpc.go"
 
