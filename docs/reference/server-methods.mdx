@@ -4,7 +4,7 @@ title: Server Methods
 
 # NewServer
 
-The `NewServer(... Services, *tls.Config, *zerolog.Logger) (*Server, error)` method is used to create a new fRPC Server. It takes a list of structs that implement
+The `NewServer(... Services, *tls.Config, *ypes.Logger) (*Server, error)` method is used to create a new fRPC Server. It takes a list of structs that implement
 the RPC methods corresponding to the services defined in the `.proto` file.
 
 For example, if the `.proto` file contains the following service definition:
@@ -34,7 +34,7 @@ type OtherService interface {
 And the corresponding generated `NewServer` method would be:
 
 ```go
-func NewServer(myService MyService, otherService OtherService, tlsConfig *tls.Config, logger *zerolog.Logger) (*Server, error) {
+func NewServer(myService MyService, otherService OtherService, tlsConfig *tls.Config, logger types.Logger) (*Server, error) {
     ...
 }
 ```
@@ -42,7 +42,7 @@ func NewServer(myService MyService, otherService OtherService, tlsConfig *tls.Co
 The generated `NewServer` method also takes the additional two arguments:
 
 - `tlsConfig`: a `*tls.Config` that will be used to configure TLS for fRPC server. This can be left as `nil` if no TLS is required.
-- `logger`: a `*zerolog.Logger` that will be used to log all events. This can be left as `nil` if no logging is required.
+- `logger`: a `types.Logger` that will be used to log all events. This can be left as `nil` if no logging is required.
 
 It returns an fRPC `*Server` on success and an error otherwise.
 
@@ -92,7 +92,7 @@ encounters an error, the `OnClosed` callback function will be called with the er
 
 # Logger
 
-The `Logger() *zerolog.Logger` method is used to retrieve the logger for the fRPC server. This is useful if you want to retrieve and extend the fRPC server.
+The `Logger() types.Logger` method is used to retrieve the logger for the fRPC server. This is useful if you want to retrieve and extend the fRPC server.
 
 # Shutdown
 
