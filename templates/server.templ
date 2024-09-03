@@ -33,7 +33,7 @@ type Server struct {
     onClosed func(*frisbee.Async, error)
 }
 
-func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger *zerolog.Logger) (*Server, error) {
+func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger types.Logger) (*Server, error) {
     var s *Server
     table := make(frisbee.HandlerTable)
     {{template "serverhandlers" .services -}}
@@ -125,7 +125,6 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
 
                 func (s *Server) create{{ CamelCaseName $method.Name}}Server ({{ FirstLowerCase (CamelCaseName $service.Name) }} {{ CamelCaseName $service.Name }}, stream *frisbee.Stream) {
                     srv := &{{ CamelCaseName $method.Name }}Server{
-                        closed: atomic.NewBool(false),
                         stream: stream,
                     }
 

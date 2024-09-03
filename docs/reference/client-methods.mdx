@@ -4,12 +4,12 @@ title: Client Methods
 
 # NewClient
 
-The `NewClient(tlsConfig *tls.Config, logger *zerolog.Logger) (*Client, error)` method is used to create a new fRPC client.
+The `NewClient(tlsConfig *tls.Config, logger types.Logger) (*Client, error)` method is used to create a new fRPC client.
 
 It takes two arguments:
 
 - `tlsConfig`: a `*tls.Config` that will be used to configure TLS for the underlying connection. This can be left as `nil` if no TLS is required.
-- `logger`: a `*zerolog.Logger` that will be used to log all events. This can be left as `nil` if no logging is required.
+- `logger`: a `types.Logger` that will be used to log all events. This can be left as `nil` if no logging is required.
 
 It returns an fRPC `*Client` on success and an error otherwise.
 
@@ -73,7 +73,7 @@ The `Raw() (net.Conn, error)` method is used to get the underlying `net.Conn` fr
 
 # Logger
 
-The `Logger() *zerolog.Logger` method is used to get the logger that was provided when the client was created. This is useful if you want to extend fRPC with custom protocols or messaging patterns directly for use with the underlying Frisbee library.
+The `Logger() types.Logger` method is used to get the logger that was provided when the client was created. This is useful if you want to extend fRPC with custom protocols or messaging patterns directly for use with the underlying Frisbee library.
 
 # Generated Methods
 
