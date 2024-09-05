@@ -18,10 +18,10 @@ which we will use to generate the server and client code.
 ## Prerequisites
 
 - [Go](https://golang.org) - fRPC works with `Go` version 1.18 or later. For installation instructions see [Go's Getting Started Guide](https://golang.org/doc/install).
-- [Protocol Buffer Compiler (protoc)](https://developers.google.com/protocol-buffers) - fRPC works with `protoc` version 3. For installation instructions see the [Protoc Getting Started Guide](https://developers.google.com/protoc/docs/getting_started).
+- [Protocol Buffer Compiler (protoc)](https://grpc.io/docs/protoc-installation/) - fRPC works with `protoc` version 3. For installation instructions see the [Protoc Getting Started Guide](https://developers.google.com/protoc/docs/getting_started).
 
 If you're using MacOS and have [Brew](https://brew.sh/) installed, you can use `brew install go`
-to install Golang, and `brew install protoc` to install the protoc compiler.
+to install Golang, and `brew install protobuf` to install the protoc compiler.
 
 ## Install the fRPC Plugin
 
@@ -64,6 +64,8 @@ $ cd ~/frpc
 Now we'll create an `echo.proto` file and define our message types:
 
 ```protobuf echo.proto
+syntax = "proto3";
+
 option go_package = "/echo";
 
 message Request {
@@ -80,6 +82,8 @@ You can see that we've defined two message types, one for the `Request` and one 
 Next, we will define a new `EchoService` in our `proto3` file. This tells the compiler that we want to generate a server and client for this service.
 
 ```protobuf echo.proto
+syntax = "proto3";
+
 option go_package = "/echo";
 
 service EchoService {
@@ -142,7 +146,7 @@ package main
 
 import (
 	"context"
-    "frpc/echo"
+	"frpc/echo"
 )
 
 type svc struct{}
@@ -166,16 +170,15 @@ package main
 
 import (
 	"context"
-    "frpc/echo"
 	"log"
-	"os"
-	"runtime"
-	"time"
+
+	"frpc/echo"
 )
 
 type svc struct{}
 
 func (s *svc) Echo(_ context.Context, req *echo.Request) (*echo.Response, error) {
+	log.Printf("Received request %s\n", req.Message)
 	res := new(echo.Response)
 	res.Message = req.Message
 	return res, nil
@@ -236,7 +239,7 @@ Here, we're creating a new echo client using our generated `echo.NewClient()` fu
 Then, we're passing in the address of the server we want to connect to. But we're not actually sending any
 requests to the server yet.
 
-To do that, we can write a simple look to send a request to the server every second and then print out the response:
+To do that, we can write a simple loop to send a request to the server every second and then print out the response:
 
 ```go echo/client/client.go
 package main
@@ -262,13 +265,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer c.Close()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	req := echo.NewRequest()
-	i := 0
-	for {
+	for i := 0; ; i++ {
 		select {
 		case <-stop:
 			err = c.Close()
@@ -276,7 +279,7 @@ func main() {
 				panic(err)
 			}
 			return
-		default:
+		case <-time.After(time.Second):
 			req.Message = fmt.Sprintf("#%d", i)
 			log.Printf("Sending Request %s\n", req.Message)
 			res, err := c.EchoService.Echo(context.Background(), req)
@@ -284,8 +287,6 @@ func main() {
 				panic(err)
 			}
 			log.Printf("Received Response %s\n", res.Message)
-			time.Sleep(time.Second)
-			i++
 		}
 	}
 }
