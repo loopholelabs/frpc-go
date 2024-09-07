@@ -187,6 +187,10 @@ func (e CloseError) Error() string {
                 send func (*{{ CamelCase $method.Input.FullName }}) error
             }
 
+            func (x *{{ CamelCaseName $method.Name }}Client) CloseChannel() <-chan struct{} {
+                return x.stream.Conn().CloseChannel()
+            }
+
             {{ if $method.IsStreamingServer -}}
             func (x *{{ CamelCaseName $method.Name }}Client) Recv() (*{{ CamelCase $method.Output.FullName }}, error) {
                 return x.recv()
