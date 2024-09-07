@@ -179,21 +179,6 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                             srv.CloseSend()
                         }
                     }()
-                {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
-                    var res *{{ CamelCase $method.Output.FullName }}
-                    outgoing = incoming
-                    outgoing.Content.Reset()
-                    res, err = {{ FirstLowerCase (CamelCaseName $service.Name) }}.{{ CamelCaseName $method.Name }}(ctx, req)
-                    if err != nil {
-                        if _, ok := err.(CloseError); ok {
-                            action = frisbee.CLOSE
-                        }
-                        res.Error(outgoing.Content, err)
-                    } else {
-                        res.Encode(outgoing.Content)
-                    }
-                    outgoing.Metadata.ContentLength = uint32((*outgoing.Content).Len())
-                {{end -}}
                 }
 
                 {{ if $method.IsStreamingClient -}}
@@ -214,6 +199,10 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
 
                 func (x *{{ CamelCaseName $method.Name }}Server) CloseSend() error {
                     return x.send(&{{ CamelCase $method.Output.FullName }}{error: io.EOF})
+                }
+
+                func (x *{{ CamelCaseName $method.Name }}Server) CloseChannel() <-chan struct{} {
+                    return x.stream.Conn().CloseChannel()
                 }
 
                 {{ if or $method.IsStreamingClient $method.IsStreamingServer -}}
