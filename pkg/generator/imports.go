@@ -6,11 +6,12 @@ var (
 	requiredImports = []string{
 		"errors",
 		"net",
+		"sync",
+		"context",
 		"github.com/loopholelabs/polyglot/v2",
 	}
 
 	serviceImports = []string{
-		"context",
 		"crypto/tls",
 		"github.com/loopholelabs/frisbee-go",
 		"github.com/loopholelabs/frisbee-go/pkg/packet",
@@ -20,9 +21,5 @@ var (
 	streamMethodImports = []string{
 		"sync/atomic",
 		"io",
-	}
-
-	methodImports = []string{
-		"sync",
 	}
 )

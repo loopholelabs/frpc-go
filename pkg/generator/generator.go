@@ -114,7 +114,6 @@ func (g *Generator) Generate(req *pluginpb.CodeGeneratorRequest) (res *pluginpb.
 			"package":             packageName,
 			"requiredImports":     requiredImports,
 			"serviceImports":      serviceImports,
-			"methodImports":       methodImports,
 			"streamMethodImports": streamMethodImports,
 			"numServices":         numServices,
 			"numMethods":          numMethods,

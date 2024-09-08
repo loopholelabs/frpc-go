@@ -4,17 +4,16 @@
 package test
 
 import (
+	"context"
 	"errors"
 	"github.com/loopholelabs/polyglot/v2"
 	"net"
+	"sync"
 
-	"context"
 	"crypto/tls"
 	"github.com/loopholelabs/frisbee-go"
 	"github.com/loopholelabs/frisbee-go/pkg/packet"
 	"github.com/loopholelabs/logging/types"
-
-	"sync"
 
 	"io"
 	"sync/atomic"
@@ -1468,12 +1467,12 @@ func (x *StockPricesSuperWrap) decode(d *polyglot.BufferDecoder) error {
 type EchoService interface {
 	Echo(context.Context, *Request) (*Response, error)
 
-	EchoStream(srv *EchoStreamServer) error
+	EchoStream(context.Context, *EchoStreamServer) error
 	Testy(context.Context, *SearchResponse) (*StockPricesWrapper, error)
 
-	Search(req *SearchResponse, srv *SearchServer) error
+	Search(context.Context, *SearchResponse, *SearchServer) error
 
-	Upload(srv *UploadServer) error
+	Upload(context.Context, *UploadServer) error
 }
 
 const connectionContextKey int = 1000
@@ -1512,12 +1511,12 @@ func (x *RPCStreamOpen) decode(d *polyglot.BufferDecoder) error {
 }
 
 type Server struct {
-	*frisbee.Server
-	onClosed func(*frisbee.Async, error)
+	server *frisbee.Server
+	wg     sync.WaitGroup
 }
 
 func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logger) (*Server, error) {
-	var s *Server
+	s := new(Server)
 	table := make(frisbee.HandlerTable)
 
 	table[10] = func(ctx context.Context, incoming *packet.Packet) (outgoing *packet.Packet, action frisbee.Action) {
@@ -1560,21 +1559,20 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 		}
 		return
 	}
-	var fsrv *frisbee.Server
 	var err error
 	if tlsConfig != nil {
-		fsrv, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
+		s.server, err = frisbee.NewServer(table, context.Background(), frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		fsrv, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
+		s.server, err = frisbee.NewServer(table, context.Background(), frisbee.WithLogger(logger))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	fsrv.SetStreamHandler(func(conn *frisbee.Async, stream *frisbee.Stream) {
+	s.server.SetStreamHandler(func(ctx context.Context, stream *frisbee.Stream) {
 		p, err := stream.ReadPacket()
 		if err != nil {
 			return
@@ -1587,34 +1585,51 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 		}
 		switch open.operation {
 		case 11:
-			s.createEchoStreamServer(echoService, stream)
+			s.createEchoStreamServer(ctx, echoService, stream)
 		case 13:
-			s.createSearchServer(echoService, stream)
+			s.createSearchServer(ctx, echoService, stream)
 		case 14:
-			s.createUploadServer(echoService, stream)
+			s.createUploadServer(ctx, echoService, stream)
 		}
 	})
 
-	fsrv.ConnContext = func(ctx context.Context, conn *frisbee.Async) context.Context {
+	s.server.ConnContext = func(ctx context.Context, conn *frisbee.Async) context.Context {
 		return context.WithValue(ctx, connectionContextKey, conn)
 	}
-	s, err = &Server{
-		Server: fsrv,
-	}, nil
 
-	fsrv.SetOnClosed(func(async *frisbee.Async, err error) {
-		if s.onClosed != nil {
-			s.onClosed(async, err)
-		}
-	})
-	return s, err
+	return s, nil
 }
 
 func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
-	if f == nil {
-		return frisbee.OnClosedNil
+	return s.server.SetOnClosed(f)
+}
+
+func (s *Server) SetPreWrite(f func()) error {
+	return s.server.SetPreWrite(f)
+}
+
+func (s *Server) SetConcurrency(concurrency uint64) {
+	s.server.SetConcurrency(concurrency)
+}
+
+func (s *Server) Start(addr string) error {
+	return s.server.Start(addr)
+}
+
+func (s *Server) StartWithListener(listener net.Listener) error {
+	return s.server.StartWithListener(listener)
+}
+
+func (s *Server) ServeConn(conn net.Conn) {
+	s.server.ServeConn(conn)
+}
+
+func (s *Server) Shutdown() error {
+	err := s.server.Shutdown()
+	if err != nil {
+		return err
 	}
-	s.onClosed = f
+	s.wg.Wait()
 	return nil
 }
 
@@ -1626,7 +1641,7 @@ type EchoStreamServer struct {
 	closed *atomic.Bool
 }
 
-func (s *Server) createEchoStreamServer(echoService EchoService, stream *frisbee.Stream) {
+func (s *Server) createEchoStreamServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
 	srv := &EchoStreamServer{
 		stream: stream,
 	}
@@ -1656,8 +1671,9 @@ func (s *Server) createEchoStreamServer(echoService EchoService, stream *frisbee
 		return srv.stream.WritePacket(p)
 	}
 
+	s.wg.Add(1)
 	go func() {
-		err := echoService.EchoStream(srv)
+		err := echoService.EchoStream(ctx, srv)
 		if err != nil {
 			res := Response{error: err}
 			res.flags = SetErrorFlag(res.flags, true)
@@ -1665,6 +1681,7 @@ func (s *Server) createEchoStreamServer(echoService EchoService, stream *frisbee
 		} else {
 			srv.CloseSend()
 		}
+		s.wg.Done()
 	}()
 }
 
@@ -1702,7 +1719,7 @@ type SearchServer struct {
 	closed *atomic.Bool
 }
 
-func (s *Server) createSearchServer(echoService EchoService, stream *frisbee.Stream) {
+func (s *Server) createSearchServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
 	srv := &SearchServer{
 		stream: stream,
 	}
@@ -1721,9 +1738,10 @@ func (s *Server) createSearchServer(echoService EchoService, stream *frisbee.Str
 	}
 	req := NewSearchResponse()
 	err = req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+	s.wg.Add(1)
 	go func() {
 
-		err := echoService.Search(req, srv)
+		err := echoService.Search(ctx, req, srv)
 		if err != nil {
 			res := Response{error: err}
 			res.flags = SetErrorFlag(res.flags, true)
@@ -1731,6 +1749,7 @@ func (s *Server) createSearchServer(echoService EchoService, stream *frisbee.Str
 		} else {
 			srv.CloseSend()
 		}
+		s.wg.Done()
 	}()
 }
 
@@ -1761,7 +1780,7 @@ type UploadServer struct {
 	closed *atomic.Bool
 }
 
-func (s *Server) createUploadServer(echoService EchoService, stream *frisbee.Stream) {
+func (s *Server) createUploadServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
 	srv := &UploadServer{
 		stream: stream,
 	}
@@ -1791,8 +1810,9 @@ func (s *Server) createUploadServer(echoService EchoService, stream *frisbee.Str
 		return srv.stream.WritePacket(p)
 	}
 
+	s.wg.Add(1)
 	go func() {
-		err := echoService.Upload(srv)
+		err := echoService.Upload(ctx, srv)
 		if err != nil {
 			res := Response{error: err}
 			res.flags = SetErrorFlag(res.flags, true)
@@ -1800,6 +1820,7 @@ func (s *Server) createUploadServer(echoService EchoService, stream *frisbee.Str
 		} else {
 			srv.CloseSend()
 		}
+		s.wg.Done()
 	}()
 }
 

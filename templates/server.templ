@@ -29,30 +29,31 @@ func (x *RPCStreamOpen) decode(d *polyglot.BufferDecoder) error {
 {{ end -}}
 
 type Server struct {
-    *frisbee.Server
-    onClosed func(*frisbee.Async, error)
+    server *frisbee.Server
+    {{ if .numStreamMethods -}}
+    wg sync.WaitGroup
+    {{end -}}
 }
 
 func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger types.Logger) (*Server, error) {
-    var s *Server
+    s := new(Server)
     table := make(frisbee.HandlerTable)
     {{template "serverhandlers" .services -}}
-    var fsrv *frisbee.Server
     var err error
     if tlsConfig != nil {
-        fsrv, err = frisbee.NewServer(table, frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
+        s.server, err = frisbee.NewServer(table, context.Background(), frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
         if err != nil {
             return nil, err
         }
     } else {
-        fsrv, err = frisbee.NewServer(table, frisbee.WithLogger(logger))
+        s.server, err = frisbee.NewServer(table, context.Background(), frisbee.WithLogger(logger))
         if err != nil {
             return nil, err
         }
     }
 
     {{ if .numStreamMethods -}}
-    fsrv.SetStreamHandler(func(conn *frisbee.Async, stream *frisbee.Stream) {
+    s.server.SetStreamHandler(func(ctx context.Context, stream *frisbee.Stream) {
         p, err := stream.ReadPacket()
         if err != nil {
             return
@@ -72,7 +73,7 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
                     {{ $opIndex := call $counter -}}
                     {{ if or $method.IsStreamingClient $method.IsStreamingServer -}}
                         case {{ $opIndex }}:
-                            s.create{{ CamelCaseName $method.Name }}Server({{ FirstLowerCase (CamelCaseName $service.Name) }}, stream)
+                            s.create{{ CamelCaseName $method.Name }}Server(ctx, {{ FirstLowerCase (CamelCaseName $service.Name) }}, stream)
                     {{end -}}
                 {{end -}}
             {{end -}}
@@ -81,26 +82,45 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
 
     {{ end -}}
 
-    fsrv.ConnContext = func (ctx context.Context, conn *frisbee.Async) context.Context {
+    s.server.ConnContext = func (ctx context.Context, conn *frisbee.Async) context.Context {
         return context.WithValue(ctx, connectionContextKey, conn)
     }
-    s, err = &Server{
-        Server: fsrv,
-    }, nil
 
-    fsrv.SetOnClosed(func(async *frisbee.Async, err error) {
-        if s.onClosed != nil {
-            s.onClosed(async, err)
-        }
-    })
-    return s, err
+    return s, nil
 }
 
 func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
-    if f == nil {
-        return frisbee.OnClosedNil
+    return s.server.SetOnClosed(f)
+}
+
+func (s *Server) SetPreWrite(f func()) error {
+    return s.server.SetPreWrite(f)
+}
+
+func (s *Server) SetConcurrency(concurrency uint64) {
+    s.server.SetConcurrency(concurrency)
+}
+
+func (s *Server) Start(addr string) error {
+    return s.server.Start(addr)
+}
+
+func (s *Server) StartWithListener(listener net.Listener) error {
+    return s.server.StartWithListener(listener)
+}
+
+func (s *Server) ServeConn(conn net.Conn) {
+    s.server.ServeConn(conn)
+}
+
+func (s *Server) Shutdown() error {
+    err := s.server.Shutdown()
+    if err != nil {
+        return err
     }
-    s.onClosed = f
+    {{ if .numStreamMethods -}}
+    s.wg.Wait()
+    {{end -}}
     return nil
 }
 
@@ -123,7 +143,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                     closed *atomic.Bool
                 }
 
-                func (s *Server) create{{ CamelCaseName $method.Name}}Server ({{ FirstLowerCase (CamelCaseName $service.Name) }} {{ CamelCaseName $service.Name }}, stream *frisbee.Stream) {
+                func (s *Server) create{{ CamelCaseName $method.Name}}Server (ctx context.Context, {{ FirstLowerCase (CamelCaseName $service.Name) }} {{ CamelCaseName $service.Name }}, stream *frisbee.Stream) {
                     srv := &{{ CamelCaseName $method.Name }}Server{
                         stream: stream,
                     }
@@ -164,12 +184,12 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                     req := New{{ CamelCase $method.Input.FullName  }}()
                     err = req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
                     {{ end -}}
-
+                    s.wg.Add(1)
                     go func() {
                     {{ if $method.IsStreamingClient -}}
-                        err := {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(srv)
+                        err := {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(ctx, srv)
                     {{ else }}
-                        err := {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(req, srv)
+                        err := {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(ctx, req, srv)
                     {{ end -}}
                         if err != nil {
                             res := {{ CamelCase $method.Output.FullName }}{error: err}
@@ -178,6 +198,7 @@ func (s *Server) SetOnClosed(f func(*frisbee.Async, error)) error {
                         } else {
                             srv.CloseSend()
                         }
+                        s.wg.Done()
                     }()
                 }
 
