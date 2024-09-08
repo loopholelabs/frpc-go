@@ -8,11 +8,6 @@ import (
     "{{$im}}"
 {{end -}}
 {{end}}
-{{ if .numMethods }}
-{{range $im := .methodImports -}}
-    "{{$im}}"
-{{end -}}
-{{end}}
 {{ if .numStreamMethods -}}
     {{range $im := .streamMethodImports -}}
         "{{$im}}"

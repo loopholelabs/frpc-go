@@ -23,7 +23,7 @@ func (s svc) Echo(_ context.Context, request *Request) (*Response, error) {
 	}}, nil
 }
 
-func (s svc) EchoStream(srv *EchoStreamServer) error {
+func (s svc) EchoStream(_ context.Context, srv *EchoStreamServer) error {
 	for {
 		request, err := srv.Recv()
 		if err == io.EOF {
@@ -52,7 +52,7 @@ func (s svc) Testy(_ context.Context, _ *SearchResponse) (*StockPricesWrapper, e
 	panic("not implemented")
 }
 
-func (s svc) Search(req *SearchResponse, srv *SearchServer) error {
+func (s svc) Search(_ context.Context, req *SearchResponse, srv *SearchServer) error {
 	assert.Equal(s.t, 1, len(req.Results))
 	for i := 0; i < 10; i++ {
 		err := srv.Send(&Response{Message: "Hello World", Test: &Data{
@@ -64,7 +64,7 @@ func (s svc) Search(req *SearchResponse, srv *SearchServer) error {
 	return srv.CloseSend()
 }
 
-func (s svc) Upload(srv *UploadServer) error {
+func (s svc) Upload(_ context.Context, srv *UploadServer) error {
 	received := 0
 	for {
 		res, err := srv.Recv()
