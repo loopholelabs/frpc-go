@@ -83,7 +83,7 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
     {{ end -}}
 
     s.server.ConnContext = func (ctx context.Context, conn *frisbee.Async) context.Context {
-        return context.WithValue(ctx, connectionContextKey, conn)
+        return context.WithValue(ctx, ConnectionContextKey, conn)
     }
 
     return s, nil
