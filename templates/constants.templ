@@ -1,5 +1,6 @@
 {{define "constants"}}
     const ConnectionContextKey int = 1000
+    const StreamContextKey int = 1001
 
     func SetErrorFlag(flags uint8, error bool) uint8 {
         return flags | 0x2

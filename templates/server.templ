@@ -54,6 +54,8 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
 
     {{ if .numStreamMethods -}}
     s.server.SetStreamHandler(func(ctx context.Context, stream *frisbee.Stream) {
+        streamCtx := context.WithValue(ctx, ConnectionContextKey, stream.Conn())
+        streamCtx = context.WithValue(streamCtx, StreamContextKey, stream)
         p, err := stream.ReadPacket()
         if err != nil {
             return
@@ -73,7 +75,7 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
                     {{ $opIndex := call $counter -}}
                     {{ if or $method.IsStreamingClient $method.IsStreamingServer -}}
                         case {{ $opIndex }}:
-                            s.create{{ CamelCaseName $method.Name }}Server(ctx, {{ FirstLowerCase (CamelCaseName $service.Name) }}, stream)
+                            s.create{{ CamelCaseName $method.Name }}Server(streamCtx, {{ FirstLowerCase (CamelCaseName $service.Name) }}, stream)
                     {{end -}}
                 {{end -}}
             {{end -}}
