@@ -1941,6 +1941,8 @@ func (c *subEchoServiceClient) Echo(ctx context.Context, req *Request) (res *Res
 		return
 	}
 	select {
+	case <-c.client.CloseChannel():
+		err = c.client.Error()
 	case res = <-ch:
 		err = res.error
 	case <-ctx.Done():
@@ -2067,6 +2069,8 @@ func (c *subEchoServiceClient) Testy(ctx context.Context, req *SearchResponse) (
 		return
 	}
 	select {
+	case <-c.client.CloseChannel():
+		err = c.client.Error()
 	case res = <-ch:
 		err = res.error
 	case <-ctx.Done():
