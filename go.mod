@@ -3,7 +3,7 @@ module github.com/loopholelabs/frpc-go
 go 1.22
 
 require (
-	github.com/loopholelabs/frisbee-go v0.10.0
+	github.com/loopholelabs/frisbee-go v0.10.1-0.20240921032845-db3cfbcfcde8
 	github.com/loopholelabs/logging v0.3.0
 	github.com/loopholelabs/polyglot/v2 v2.0.3-0.20240912163903-0191de2ea9e2
 	github.com/loopholelabs/testing v0.2.3
