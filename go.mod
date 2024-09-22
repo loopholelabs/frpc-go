@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/loopholelabs/frisbee-go v0.10.0
 	github.com/loopholelabs/logging v0.3.0
-	github.com/loopholelabs/polyglot/v2 v2.0.2
+	github.com/loopholelabs/polyglot/v2 v2.0.3-0.20240912163903-0191de2ea9e2
 	github.com/loopholelabs/testing v0.2.3
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/protobuf v1.34.2

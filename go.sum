@@ -12,8 +12,8 @@ github.com/loopholelabs/frisbee-go v0.10.0 h1:eqdDqm44V23GMxhjDL9OBz2Fxecsu42M0K
 github.com/loopholelabs/frisbee-go v0.10.0/go.mod h1:RwKglItbNcQq9UW6Vm2aOwOWXR6wTxUNjvuXcCIyJkU=
 github.com/loopholelabs/logging v0.3.0 h1:Rfo9fGdBk4nwbNdiLrVUF7JkYoC67dvGDodkRe81xF0=
 github.com/loopholelabs/logging v0.3.0/go.mod h1:uRDUydiqPqKbZkb0WoQ3dfyAcJ2iOMhxdEafZssLVv0=
-github.com/loopholelabs/polyglot/v2 v2.0.2 h1:v308fg2ZKSvkKDnWgBnDvvmiu4YypCxcDe5Ih5GUVnY=
-github.com/loopholelabs/polyglot/v2 v2.0.2/go.mod h1:kFoSKvnKAWmV0ICfbaCHDv/+cz5LSuA+xXG4WtYV/z4=
+github.com/loopholelabs/polyglot/v2 v2.0.3-0.20240912163903-0191de2ea9e2 h1:BzEHd3rd0chMcJWYomdzPre3yz+3kHlODWrlebEYKAA=
+github.com/loopholelabs/polyglot/v2 v2.0.3-0.20240912163903-0191de2ea9e2/go.mod h1:kFoSKvnKAWmV0ICfbaCHDv/+cz5LSuA+xXG4WtYV/z4=
 github.com/loopholelabs/testing v0.2.3 h1:4nVuK5ctaE6ua5Z0dYk2l7xTFmcpCYLUeGjRBp8keOA=
 github.com/loopholelabs/testing v0.2.3/go.mod h1:gqtGY91soYD1fQoKQt/6kP14OYpS7gcbcIgq5mc9m8Q=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=

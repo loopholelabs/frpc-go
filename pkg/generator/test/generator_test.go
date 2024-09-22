@@ -7,8 +7,10 @@ import (
 	"io"
 	"testing"
 
+	"github.com/loopholelabs/polyglot/v2"
 	"github.com/loopholelabs/testing/conn/pair"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRPC(t *testing.T) {
@@ -129,4 +131,15 @@ func testClientStreaming(client *Client, t *testing.T) {
 	res, err := stream.CloseAndRecv()
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", res.Message)
+}
+
+func TestEncodeDecodePreservesNilFields(t *testing.T) {
+	r := &Response{Message: "test", Test: nil}
+	b := polyglot.NewBuffer()
+	r.Encode(b)
+
+	got := &Response{}
+	err := got.Decode(b.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, r, got)
 }
