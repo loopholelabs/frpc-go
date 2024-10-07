@@ -8,7 +8,7 @@ require (
 	github.com/loopholelabs/polyglot/v2 v2.0.2
 	github.com/loopholelabs/testing v0.2.3
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
