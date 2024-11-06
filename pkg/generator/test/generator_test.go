@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -153,7 +154,11 @@ func TestRPCInvalidConnection(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make RPC request with a 3s timeout.
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	timeout := 3 * time.Second
+	if os.Getenv("CI") != "" {
+		timeout = 10 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	t.Cleanup(cancel)
 
 	req := &Request{
