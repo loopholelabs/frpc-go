@@ -4,11 +4,18 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
+	"github.com/loopholelabs/polyglot/v2"
 	"github.com/loopholelabs/testing/conn/pair"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRPC(t *testing.T) {
@@ -129,4 +136,52 @@ func testClientStreaming(client *Client, t *testing.T) {
 	res, err := stream.CloseAndRecv()
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello World", res.Message)
+}
+
+func TestRPCInvalidConnection(t *testing.T) {
+	// Create non-Frisbee server the client can connect to but not exchange
+	// messages, so the connection will be broken soon after connect.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "test")
+	}))
+	t.Cleanup(ts.Close)
+
+	// Create a client and connect to test server.
+	client, err := NewClient(nil, nil)
+	require.NoError(t, err)
+
+	err = client.Connect(ts.Listener.Addr().String())
+	require.NoError(t, err)
+
+	// Make RPC request with a 3s timeout.
+	timeout := 3 * time.Second
+	if os.Getenv("CI") != "" {
+		timeout = 10 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	t.Cleanup(cancel)
+
+	req := &Request{
+		Message: "Hello World",
+		Corpus:  RequestUNIVERSAL,
+	}
+	response, err := client.EchoService.Echo(ctx, req)
+
+	// Verify request doesn't block forever.
+	require.NoError(t, ctx.Err())
+
+	// Verify request fails.
+	require.Error(t, err)
+	require.Nil(t, response)
+}
+
+func TestEncodeDecodePreservesNilFields(t *testing.T) {
+	r := &Response{Message: "test", Test: nil}
+	b := polyglot.NewBuffer()
+	r.Encode(b)
+
+	got := &Response{}
+	err := got.Decode(b.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, r, got)
 }
