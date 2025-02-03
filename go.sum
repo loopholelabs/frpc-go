@@ -10,8 +10,8 @@ github.com/loopholelabs/common v0.4.10 h1:BMJSMwH0PiVtdpOlXNPlW827B9WPJ/Gkb/q20N
 github.com/loopholelabs/common v0.4.10/go.mod h1:wc17hLpzZaDbndb7Fh3MXQDnhf4Cmf/JKC+LmXaD6II=
 github.com/loopholelabs/frisbee-go v0.10.2 h1:TvfONSpoCrrvG7/8QzBbHou2gPqOwN5iFL+4fp3bu4s=
 github.com/loopholelabs/frisbee-go v0.10.2/go.mod h1:JJhInJ5zjxpwOLAqEviOjTo1k8E3NNEF/fQTrC4lZ/4=
-github.com/loopholelabs/logging v0.3.1 h1:VA9DF3WrbmvJC1uQJ/XcWgz8KWXydWwe3BdDiMbN2FY=
-github.com/loopholelabs/logging v0.3.1/go.mod h1:uRDUydiqPqKbZkb0WoQ3dfyAcJ2iOMhxdEafZssLVv0=
+github.com/loopholelabs/logging v0.3.2 h1:JPfQr/YcYoMlEbgwgoslQs/C2He/nPVCAD1FpdNceRo=
+github.com/loopholelabs/logging v0.3.2/go.mod h1:9p5/U/hNxghtUoD6k2Rzx7X4tr4ik3QzhyYUu1m7D58=
 github.com/loopholelabs/polyglot/v2 v2.0.3 h1:CpH2az5shkOgOBASnzjc1XC5SVzQMbWyHt4R7ds/FFc=
 github.com/loopholelabs/polyglot/v2 v2.0.3/go.mod h1:yodgE9ile0RS/npD0WnHfFpMLvL5FlC9n3qZ1tTkB9g=
 github.com/loopholelabs/testing v0.2.3 h1:4nVuK5ctaE6ua5Z0dYk2l7xTFmcpCYLUeGjRBp8keOA=
@@ -26,8 +26,8 @@ github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
 github.com/rs/zerolog v1.33.0 h1:1cU2KZkvPxNyfgEmhHAz/1A9Bz+llsdYzklWFzgp0r8=
 github.com/rs/zerolog v1.33.0/go.mod h1:/7mN4D5sKwJLZQ2b/znpjC3/GQWY/xaDXUM0kKWRHss=
-github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
-github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
+github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
 go.uber.org/goleak v1.3.0/go.mod h1:CoHD4mav9JJNrW/WLlf7HGZPjdw8EucARQHekz1X6bE=
 golang.org/x/sys v0.24.0 h1:Twjiwq9dn6R1fQcyiK+wQyHWfaz/BJB+YIpzU/Cv3Xg=
