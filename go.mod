@@ -7,7 +7,7 @@ require (
 	github.com/loopholelabs/logging v0.3.1
 	github.com/loopholelabs/polyglot/v2 v2.0.3
 	github.com/loopholelabs/testing v0.2.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.11.1
 	google.golang.org/protobuf v1.36.5
 )
 
