@@ -1,6 +1,6 @@
 module github.com/loopholelabs/frpc-go
 
-go 1.22
+go 1.23
 
 require (
 	github.com/loopholelabs/frisbee-go v0.10.2
@@ -8,7 +8,7 @@ require (
 	github.com/loopholelabs/polyglot/v2 v2.0.3
 	github.com/loopholelabs/testing v0.2.3
 	github.com/stretchr/testify v1.11.1
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.9
 )
 
 require (
