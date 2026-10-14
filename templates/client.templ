@@ -1,4 +1,36 @@
 {{define "client"}}
+{{ if .numStreamMethods -}}
+type clientStreamIDs struct {
+    mu sync.Mutex
+    next uint16
+    active map[uint16]struct{}
+}
+
+func newClientStreamIDs() *clientStreamIDs {
+    return &clientStreamIDs{active: make(map[uint16]struct{})}
+}
+
+func (s *clientStreamIDs) acquire() (uint16, error) {
+    s.mu.Lock()
+    defer s.mu.Unlock()
+    for range 1 << 16 {
+        s.next++
+        if _, ok := s.active[s.next]; ok {
+            continue
+        }
+        s.active[s.next] = struct{}{}
+        return s.next, nil
+    }
+    return 0, errors.New("frpc: no stream IDs available")
+}
+
+func (s *clientStreamIDs) release(id uint16) {
+    s.mu.Lock()
+    delete(s.active, id)
+    s.mu.Unlock()
+}
+{{ end -}}
+
 {{ range $i, $v := (MakeIterable .services.Len) -}}
     {{ $service := $.services.Get $i -}}
     type sub{{ CamelCaseName $service.Name }}Client struct {
@@ -12,8 +44,9 @@
              inflight{{ CamelCaseName $method.Name }}Mu sync.RWMutex
              {{ end -}}
          {{end -}}
-        nextStreamingID uint16
-        nextStreamingIDMu sync.RWMutex
+        {{ if $.numStreamMethods -}}
+        streamIDs *clientStreamIDs
+        {{ end -}}
     }
 {{end -}}
 
@@ -30,6 +63,10 @@ func NewClient (tlsConfig *tls.Config, logger types.Logger) (*Client, error) {
     c := new(Client)
     table := make(frisbee.HandlerTable)
     {{template "clienthandlers" .services -}}
+
+    {{ if .numStreamMethods -}}
+    streamIDs := newClientStreamIDs()
+    {{ end -}}
 
     var err error
     if tlsConfig != nil {
@@ -48,6 +85,9 @@ func NewClient (tlsConfig *tls.Config, logger types.Logger) (*Client, error) {
         {{ $service := $.services.Get $i -}}
         c.{{ CamelCaseName $service.Name }} = new(sub{{ CamelCaseName $service.Name }}Client)
         c.{{ CamelCaseName $service.Name }}.client = c.Client
+        {{ if $.numStreamMethods -}}
+        c.{{ CamelCaseName $service.Name }}.streamIDs = streamIDs
+        {{ end -}}
         {{ range $i, $v := (MakeIterable $service.Methods.Len) -}}
             {{ $method := $service.Methods.Get $i -}}
                 {{ if not (or $method.IsStreamingServer $method.IsStreamingClient) -}}
@@ -98,7 +138,9 @@ func (e CloseError) Error() string {
             if ch, ok := c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}[incoming.Metadata.Id]; ok {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
                 res := New{{ CamelCase $method.Output.FullName }}()
-                res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+                if err := res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength]); err != nil {
+                    res.error = err
+                }
                 ch <- res
             } else {
                 c.{{ CamelCaseName $service.Name }}.inflight{{ CamelCaseName $method.Name }}Mu.RUnlock()
@@ -119,12 +161,16 @@ func (e CloseError) Error() string {
         {{ $opIndex := call $counter -}}
         {{if or $method.IsStreamingClient $method.IsStreamingServer -}}
             func (c *sub{{ CamelCaseName $service.Name }}Client) {{ CamelCaseName $method.Name }}(ctx context.Context, req *{{ CamelCase $method.Input.FullName }}) (*{{ CamelCaseName $method.Name }}Client, error) {
+                if err := ctx.Err(); err != nil {
+                    return nil, err
+                }
                 p := packet.Get()
 
-                c.nextStreamingIDMu.Lock()
-                c.nextStreamingID += 1
-                id := c.nextStreamingID
-                c.nextStreamingIDMu.Unlock()
+                id, err := c.streamIDs.acquire()
+                if err != nil {
+                    packet.Put(p)
+                    return nil, err
+                }
 
                 open := &RPCStreamOpen{operation: {{ $opIndex}}};
 
@@ -132,47 +178,92 @@ func (e CloseError) Error() string {
                 p.Metadata.ContentLength = uint32((*p.Content).Len())
 
                 fStream := c.client.Stream(id)
-                fStream.WritePacket(p)
+                err = fStream.WritePacket(p)
+                packet.Put(p)
+                if err != nil {
+                    _ = fStream.Close()
+                    c.streamIDs.release(id)
+                    return nil, err
+                }
 
                 if req != nil {
                     p2 := packet.Get()
                     req.Encode(p2.Content)
                     p2.Metadata.ContentLength = uint32((*p2.Content).Len())
-                    fStream.WritePacket(p2)
+                    err = fStream.WritePacket(p2)
+                    packet.Put(p2)
+                    if err != nil {
+                        _ = fStream.Close()
+                        c.streamIDs.release(id)
+                        return nil, err
+                    }
                 }
 
                 stream := {{ CamelCaseName $method.Name }}Client{
                     context: ctx,
                     stream: fStream,
+                    done: make(chan struct{}),
                 }
+
+                stream.close = func () {
+                    stream.closeOnce.Do(func() {
+                        close(stream.done)
+                        _ = stream.stream.Close()
+                        c.streamIDs.release(id)
+                    })
+                }
+                go func() {
+                    select {
+                    case <-ctx.Done():
+                        stream.close()
+                    case <-stream.done:
+                    }
+                }()
 
                 stream.recv = func () (*{{ CamelCase $method.Output.FullName }}, error) {
                     p, err := stream.stream.ReadPacket()
                     if err != nil {
+                        stream.close()
+                        if ctxErr := ctx.Err(); ctxErr != nil {
+                            return nil, ctxErr
+                        }
                         return nil, err
                     }
 
                     res := New{{ CamelCase $method.Output.FullName }}()
                     err = res.Decode((*p.Content).Bytes())
+                    packet.Put(p)
                     if err != nil {
+                        stream.close()
                         return nil, err
                     }
                     if errors.Is(res.error, io.EOF) {
+                        stream.close()
                         return nil, io.EOF
+                    }
+                    if res.error != nil {
+                        stream.close()
+                        return nil, res.error
                     }
 
                     return res, nil
                 }
 
-                stream.close = func () {
-                    stream.stream.Close()
-                }
                 stream.send = func (m *{{ CamelCase $method.Input.FullName }}) error {
+                    if err := ctx.Err(); err != nil {
+                        stream.close()
+                        return err
+                    }
                     p := packet.Get()
 
                     m.Encode(p.Content)
                     p.Metadata.ContentLength = uint32((*p.Content).Len())
-                    return stream.stream.WritePacket(p)
+                    err := stream.stream.WritePacket(p)
+                    packet.Put(p)
+                    if err != nil {
+                        stream.close()
+                    }
+                    return err
                 }
                 return &stream, nil
             }
@@ -181,7 +272,9 @@ func (e CloseError) Error() string {
                 context context.Context
                 recv func() (*{{ CamelCase $method.Output.FullName }}, error)
                 close func()
-                closed *atomic.Bool
+                closeOnce sync.Once
+                done chan struct{}
+                sendClosed atomic.Bool
 
                 stream *frisbee.Stream
                 send func (*{{ CamelCase $method.Input.FullName }}) error
@@ -189,6 +282,10 @@ func (e CloseError) Error() string {
 
             func (x *{{ CamelCaseName $method.Name }}Client) CloseChannel() <-chan struct{} {
                 return x.stream.Conn().CloseChannel()
+            }
+
+            func (x *{{ CamelCaseName $method.Name }}Client) Close() {
+                x.close()
             }
 
             {{ if $method.IsStreamingServer -}}
@@ -203,15 +300,28 @@ func (e CloseError) Error() string {
                 }
 
                 func (x *{{ CamelCaseName $method.Name }}Client) CloseSend() error {
+                    if !x.sendClosed.CompareAndSwap(false, true) {
+                        return nil
+                    }
                     return x.send(&{{ CamelCase $method.Input.FullName }}{error: io.EOF})
                 }
 
                 func (x *{{ CamelCaseName $method.Name }}Client) CloseAndRecv() (*{{ CamelCase $method.Output.FullName }}, error) {
-                    err := x.send(&{{ CamelCase $method.Input.FullName }}{error: io.EOF})
+                    if err := x.CloseSend(); err != nil {
+                        return nil, err
+                    }
+                    res, err := x.recv()
                     if err != nil {
                         return nil, err
                     }
-                    return x.recv()
+                    _, err = x.recv()
+                    if !errors.Is(err, io.EOF) {
+                        if err == nil {
+                            return nil, errors.New("frpc: missing stream EOF")
+                        }
+                        return nil, err
+                    }
+                    return res, nil
                 }
             {{ end -}}
         {{else -}}

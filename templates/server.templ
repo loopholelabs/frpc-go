@@ -62,8 +62,9 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
         }
         open := &RPCStreamOpen{}
         err = open.Decode((*p.Content).Bytes())
+        packet.Put(p)
         if err != nil {
-            stream.Close()
+            _ = stream.Close()
             return
         }
         switch open.operation {
@@ -79,6 +80,8 @@ func NewServer({{ GetServerFields .services }}, tlsConfig *tls.Config, logger ty
                     {{end -}}
                 {{end -}}
             {{end -}}
+            default:
+                _ = stream.Close()
         }
     })
 
@@ -146,7 +149,7 @@ func (s *Server) Shutdown() error {
                     send func (*{{ CamelCase $method.Output.FullName }}) error
 
                     stream *frisbee.Stream
-                    closed *atomic.Bool
+                    sendClosed atomic.Bool
                 }
 
                 func (s *Server) create{{ CamelCaseName $method.Name}}Server (ctx context.Context, {{ FirstLowerCase (CamelCaseName $service.Name) }} {{ CamelCaseName $service.Name }}, stream *frisbee.Stream) {
@@ -163,11 +166,15 @@ func (s *Server) Shutdown() error {
 
                             res := New{{ CamelCase $method.Input.FullName }}()
                             err = res.Decode((*p.Content).Bytes())
+                            packet.Put(p)
                             if err != nil {
                                 return nil, err
                             }
                             if errors.Is(res.error, io.EOF) {
                                 return nil, io.EOF
+                            }
+                            if res.error != nil {
+                                return nil, res.error
                             }
 
                             return res, nil
@@ -179,7 +186,9 @@ func (s *Server) Shutdown() error {
 
                         m.Encode(p.Content)
                         p.Metadata.ContentLength = uint32((*p.Content).Len())
-                        return srv.stream.WritePacket(p)
+                        err := srv.stream.WritePacket(p)
+                        packet.Put(p)
+                        return err
                     }
 
                     {{ if not $method.IsStreamingClient -}}
@@ -189,9 +198,16 @@ func (s *Server) Shutdown() error {
                     }
                     req := New{{ CamelCase $method.Input.FullName  }}()
                     err = req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+                    packet.Put(incoming)
+                    if err != nil {
+                        _ = stream.Close()
+                        return
+                    }
                     {{ end -}}
                     s.wg.Add(1)
                     go func() {
+                    defer s.wg.Done()
+                    defer srv.close()
                     {{ if $method.IsStreamingClient -}}
                         err := {{ FirstLowerCaseName $service.Name }}.{{ CamelCaseName $method.Name }}(ctx, srv)
                     {{ else }}
@@ -204,7 +220,6 @@ func (s *Server) Shutdown() error {
                         } else {
                             srv.CloseSend()
                         }
-                        s.wg.Done()
                     }()
                 }
 
@@ -213,10 +228,11 @@ func (s *Server) Shutdown() error {
                         return x.recv()
                     }
 
-                    func (x *{{ CamelCaseName $method.Name }}Server) close() {
-                        x.stream.Close()
-                    }
                 {{ end -}}
+
+                func (x *{{ CamelCaseName $method.Name }}Server) close() {
+                    _ = x.stream.Close()
+                }
 
                 {{ if $method.IsStreamingServer -}}
                     func (x *{{ CamelCaseName $method.Name }}Server) Send(m *{{ CamelCase $method.Output.FullName }}) error {
@@ -225,6 +241,9 @@ func (s *Server) Shutdown() error {
                 {{ end -}}
 
                 func (x *{{ CamelCaseName $method.Name }}Server) CloseSend() error {
+                    if !x.sendClosed.CompareAndSwap(false, true) {
+                        return nil
+                    }
                     return x.send(&{{ CamelCase $method.Output.FullName }}{error: io.EOF})
                 }
 
@@ -266,7 +285,7 @@ func (s *Server) Shutdown() error {
                         if _, ok := err.(CloseError); ok {
                             action = frisbee.CLOSE
                         }
-                        res.Error(outgoing.Content, err)
+                        res.encodeError(outgoing.Content, err)
                     } else {
                         res.Encode(outgoing.Content)
                     }

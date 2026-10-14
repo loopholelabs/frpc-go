@@ -52,6 +52,26 @@ func TestRPC(t *testing.T) {
 	})
 }
 
+func TestClientStreamIDs(t *testing.T) {
+	ids := newClientStreamIDs()
+	seen := make(map[uint16]struct{}, 1<<16)
+	for range 1 << 16 {
+		id, err := ids.acquire()
+		require.NoError(t, err)
+		_, exists := seen[id]
+		require.False(t, exists)
+		seen[id] = struct{}{}
+	}
+
+	_, err := ids.acquire()
+	require.Error(t, err)
+
+	ids.release(42)
+	id, err := ids.acquire()
+	require.NoError(t, err)
+	require.Equal(t, uint16(42), id)
+}
+
 func testSynchronous(client *Client, t *testing.T) {
 	ctx := context.Background()
 	req := &Request{
@@ -86,6 +106,8 @@ func testBidirectional(client *Client, t *testing.T) {
 		if roundtrips == 100 {
 			err = stream.CloseSend()
 			assert.NoError(t, err)
+			_, err = stream.Recv()
+			assert.ErrorIs(t, err, io.EOF)
 			break
 		}
 
@@ -184,4 +206,188 @@ func TestEncodeDecodePreservesNilFields(t *testing.T) {
 	err := got.Decode(b.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, r, got)
+}
+
+func TestOneofRoundTrip(t *testing.T) {
+	roundTrip := func(t *testing.T, want *OneofPayload) *OneofPayload {
+		t.Helper()
+		b := polyglot.NewBuffer()
+		want.Encode(b)
+		got := NewOneofPayload()
+		require.NoError(t, got.Decode(b.Bytes()))
+		require.Equal(t, want, got)
+		return got
+	}
+
+	t.Run("not set", func(t *testing.T) {
+		got := roundTrip(t, &OneofPayload{Ordinary: "ordinary"})
+		require.Equal(t, OneofPayloadValueCaseNotSet, got.WhichValue())
+		require.Equal(t, OneofPayloadSecondaryCaseNotSet, got.WhichSecondary())
+	})
+
+	t.Run("scalar default values remain selected", func(t *testing.T) {
+		for name, set := range map[string]func(*OneofPayload){
+			"string": func(x *OneofPayload) { x.SetText("") },
+			"enum":   func(x *OneofPayload) { x.SetEnumValue(Potato) },
+			"bool":   func(x *OneofPayload) { x.SetEnabled(false) },
+			"int64":  func(x *OneofPayload) { x.SetNumber(0) },
+		} {
+			t.Run(name, func(t *testing.T) {
+				want := NewOneofPayload()
+				set(want)
+				got := roundTrip(t, want)
+				require.Equal(t, want.WhichValue(), got.WhichValue())
+			})
+		}
+	})
+
+	t.Run("bytes", func(t *testing.T) {
+		want := NewOneofPayload()
+		want.SetRaw([]byte("raw payload"))
+		roundTrip(t, want)
+	})
+
+	t.Run("message", func(t *testing.T) {
+		want := NewOneofPayload()
+		want.SetPayload(&Data{Message: "nested", Checker: Monkey})
+		roundTrip(t, want)
+
+		want.SetPayload(nil)
+		got := roundTrip(t, want)
+		require.Equal(t, OneofPayloadValueCasePayload, got.WhichValue())
+		require.Nil(t, got.GetPayload())
+	})
+
+	t.Run("multiple independent groups", func(t *testing.T) {
+		want := NewOneofPayload()
+		want.SetText("primary")
+		want.SetCode(42)
+		got := roundTrip(t, want)
+		require.Equal(t, "primary", got.GetText())
+		require.Equal(t, uint32(42), got.GetCode())
+	})
+}
+
+func TestOneofSettersAndReuse(t *testing.T) {
+	x := NewOneofPayload()
+	x.SetText("old")
+	x.SetRaw([]byte("new"))
+	require.Equal(t, OneofPayloadValueCaseRaw, x.WhichValue())
+	require.Empty(t, x.Text)
+	require.Empty(t, x.GetText())
+	require.Equal(t, []byte("new"), x.GetRaw())
+
+	want := NewOneofPayload()
+	want.SetNumber(123)
+	b := polyglot.NewBuffer()
+	want.Encode(b)
+	require.NoError(t, x.Decode(b.Bytes()))
+	require.Equal(t, OneofPayloadValueCaseNumber, x.WhichValue())
+	require.Nil(t, x.Raw)
+	require.Equal(t, int64(123), x.GetNumber())
+
+	x.ClearValue()
+	require.Equal(t, OneofPayloadValueCaseNotSet, x.WhichValue())
+}
+
+func TestOneofEncodesOnlyActiveMember(t *testing.T) {
+	clean := NewOneofPayload()
+	clean.SetText("active")
+	cleanBuffer := polyglot.NewBuffer()
+	clean.Encode(cleanBuffer)
+
+	withInactiveData := NewOneofPayload()
+	withInactiveData.SetText("active")
+	withInactiveData.Raw = make([]byte, 1<<20)
+	withInactiveData.Payload = &Data{Message: "inactive"}
+	withInactiveData.Number = 42
+	withInactiveDataBuffer := polyglot.NewBuffer()
+	withInactiveData.Encode(withInactiveDataBuffer)
+
+	require.Equal(t, cleanBuffer.Bytes(), withInactiveDataBuffer.Bytes())
+}
+
+func TestOneofMemberNamedError(t *testing.T) {
+	want := NewErrorOneof()
+	want.SetError(&Data{Message: "application error", Checker: Monkey})
+	b := polyglot.NewBuffer()
+	want.Encode(b)
+
+	got := NewErrorOneof()
+	require.NoError(t, got.Decode(b.Bytes()))
+	require.Equal(t, ErrorOneofResultCaseError, got.WhichResult())
+	require.Equal(t, want.GetError(), got.GetError())
+}
+
+func TestOneofRejectsUnknownCase(t *testing.T) {
+	x := NewOneofPayload()
+	x.SetText("value")
+	b := polyglot.NewBuffer()
+	x.Encode(b)
+	encoded := append([]byte(nil), b.Bytes()...)
+
+	d := polyglot.Decoder(encoded)
+	require.False(t, d.Nil())
+	_, err := d.Error()
+	require.Error(t, err)
+	_, err = d.Uint8()
+	require.NoError(t, err)
+	_, err = d.String()
+	require.NoError(t, err)
+	caseOffset := len(encoded) - len(*d)
+	require.Less(t, caseOffset+1, len(encoded))
+	encoded[caseOffset+1] = 99
+
+	err = NewOneofPayload().Decode(encoded)
+	require.ErrorIs(t, err, ErrUnknownOneofCase)
+}
+
+func BenchmarkOneofEncode(b *testing.B) {
+	x := NewSampleMessage()
+	x.SetName("a representative oneof payload")
+	buf := polyglot.NewBuffer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		x.Encode(buf)
+	}
+}
+
+func BenchmarkOneofDecode(b *testing.B) {
+	x := NewSampleMessage()
+	x.SetName("a representative oneof payload")
+	buf := polyglot.NewBuffer()
+	x.Encode(buf)
+	encoded := buf.Bytes()
+	got := NewSampleMessage()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if err := got.Decode(encoded); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkRegularFieldEncode(b *testing.B) {
+	x := &RegularPayload{Text: "a representative oneof payload"}
+	buf := polyglot.NewBuffer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		buf.Reset()
+		x.Encode(buf)
+	}
+}
+
+func BenchmarkRegularFieldDecode(b *testing.B) {
+	x := &RegularPayload{Text: "a representative oneof payload"}
+	buf := polyglot.NewBuffer()
+	x.Encode(buf)
+	encoded := buf.Bytes()
+	got := NewRegularPayload()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if err := got.Decode(encoded); err != nil {
+			b.Fatal(err)
+		}
+	}
 }
