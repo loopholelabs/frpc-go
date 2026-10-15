@@ -11,6 +11,8 @@ require (
 	google.golang.org/protobuf v1.36.5
 )
 
+replace github.com/loopholelabs/polyglot/v2 => github.com/tiborvass/polyglot/v2 v2.0.4-0.20261015012615-3c54ca16f156
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/loopholelabs/common v0.4.10 // indirect

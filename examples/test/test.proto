@@ -102,6 +102,33 @@ message SampleMessage {
   }
 }
 
+message OneofPayload {
+  string ordinary = 1;
+  oneof value {
+    string text = 2;
+    bytes raw = 7;
+    Data payload = 11;
+    Test enum_value = 15;
+    bool enabled = 20;
+    int64 number = 25;
+  }
+  oneof secondary {
+    uint32 code = 30;
+    string note = 31;
+  }
+}
+
+message RegularPayload {
+  string text = 1;
+}
+
+message ErrorOneof {
+  oneof result {
+    Data value = 1;
+    Data error = 2;
+  }
+}
+
 message TestPotato {
   map<string, Test> prices = 1;
 }

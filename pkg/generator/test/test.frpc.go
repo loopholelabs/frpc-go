@@ -4,23 +4,24 @@
 package test
 
 import (
+	"context"
 	"errors"
+	"github.com/loopholelabs/polyglot/v2"
 	"net"
 	"sync"
-	"context"
-	"github.com/loopholelabs/polyglot/v2"
 
 	"crypto/tls"
 	"github.com/loopholelabs/frisbee-go"
 	"github.com/loopholelabs/frisbee-go/pkg/packet"
 	"github.com/loopholelabs/logging/types"
 
-	"sync/atomic"
 	"io"
+	"sync/atomic"
 )
 
 var (
-	ErrDecodeNil = errors.New("cannot decode into a nil root struct")
+	ErrDecodeNil        = errors.New("cannot decode into a nil root struct")
+	ErrUnknownOneofCase = errors.New("unknown oneof case")
 )
 
 type Test uint32
@@ -54,8 +55,11 @@ func NewRequest() *Request {
 	return &Request{}
 }
 
-func (x *Request) Error(b *polyglot.Buffer, err error) {
+func (x *Request) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *Request) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *Request) Encode(b *polyglot.Buffer) {
@@ -117,8 +121,11 @@ func NewResponse() *Response {
 	return &Response{}
 }
 
-func (x *Response) Error(b *polyglot.Buffer, err error) {
+func (x *Response) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *Response) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *Response) Encode(b *polyglot.Buffer) {
@@ -131,6 +138,7 @@ func (x *Response) Encode(b *polyglot.Buffer) {
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
 		polyglot.Encoder(b).String(x.Message)
+
 		x.Test.Encode(b)
 	}
 }
@@ -182,8 +190,11 @@ func NewData() *Data {
 	return &Data{}
 }
 
-func (x *Data) Error(b *polyglot.Buffer, err error) {
+func (x *Data) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *Data) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *Data) Encode(b *polyglot.Buffer) {
@@ -250,8 +261,11 @@ func NewMyMessage1() *MyMessage1 {
 	return &MyMessage1{}
 }
 
-func (x *MyMessage1) Error(b *polyglot.Buffer, err error) {
+func (x *MyMessage1) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *MyMessage1) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *MyMessage1) Encode(b *polyglot.Buffer) {
@@ -263,6 +277,7 @@ func (x *MyMessage1) Encode(b *polyglot.Buffer) {
 			return
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
+
 	}
 }
 
@@ -306,8 +321,11 @@ func NewMyMessage2() *MyMessage2 {
 	return &MyMessage2{}
 }
 
-func (x *MyMessage2) Error(b *polyglot.Buffer, err error) {
+func (x *MyMessage2) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *MyMessage2) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *MyMessage2) Encode(b *polyglot.Buffer) {
@@ -319,6 +337,7 @@ func (x *MyMessage2) Encode(b *polyglot.Buffer) {
 			return
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
+
 	}
 }
 
@@ -359,8 +378,11 @@ func NewSearchResponseResult() *SearchResponseResult {
 	return &SearchResponseResult{}
 }
 
-func (x *SearchResponseResult) Error(b *polyglot.Buffer, err error) {
+func (x *SearchResponseResult) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *SearchResponseResult) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *SearchResponseResult) Encode(b *polyglot.Buffer) {
@@ -373,6 +395,7 @@ func (x *SearchResponseResult) Encode(b *polyglot.Buffer) {
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
 		polyglot.Encoder(b).String(x.Url).String(x.Title)
+
 		polyglot.Encoder(b).Slice(uint32(len(x.Snippets)), polyglot.StringKind)
 		for _, v := range x.Snippets {
 			polyglot.Encoder(b).String(v)
@@ -440,8 +463,11 @@ func NewSearchResponse() *SearchResponse {
 	return &SearchResponse{}
 }
 
-func (x *SearchResponse) Error(b *polyglot.Buffer, err error) {
+func (x *SearchResponse) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *SearchResponse) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *SearchResponse) Encode(b *polyglot.Buffer) {
@@ -569,8 +595,11 @@ func NewResulting() *Resulting {
 	return &Resulting{}
 }
 
-func (x *Resulting) Error(b *polyglot.Buffer, err error) {
+func (x *Resulting) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *Resulting) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *Resulting) Encode(b *polyglot.Buffer) {
@@ -583,6 +612,7 @@ func (x *Resulting) Encode(b *polyglot.Buffer) {
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
 		polyglot.Encoder(b).String(x.Url).String(x.Title)
+
 		polyglot.Encoder(b).Slice(uint32(len(x.Snippets)), polyglot.StringKind)
 		for _, v := range x.Snippets {
 			polyglot.Encoder(b).String(v)
@@ -647,8 +677,11 @@ func NewSomeOtherMessage() *SomeOtherMessage {
 	return &SomeOtherMessage{}
 }
 
-func (x *SomeOtherMessage) Error(b *polyglot.Buffer, err error) {
+func (x *SomeOtherMessage) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *SomeOtherMessage) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *SomeOtherMessage) Encode(b *polyglot.Buffer) {
@@ -708,8 +741,11 @@ func NewOuterMiddleAAInner() *OuterMiddleAAInner {
 	return &OuterMiddleAAInner{}
 }
 
-func (x *OuterMiddleAAInner) Error(b *polyglot.Buffer, err error) {
+func (x *OuterMiddleAAInner) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *OuterMiddleAAInner) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *OuterMiddleAAInner) Encode(b *polyglot.Buffer) {
@@ -768,8 +804,11 @@ func NewOuterMiddleAA() *OuterMiddleAA {
 	return &OuterMiddleAA{}
 }
 
-func (x *OuterMiddleAA) Error(b *polyglot.Buffer, err error) {
+func (x *OuterMiddleAA) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *OuterMiddleAA) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *OuterMiddleAA) Encode(b *polyglot.Buffer) {
@@ -829,8 +868,11 @@ func NewOuterMiddleBBInner() *OuterMiddleBBInner {
 	return &OuterMiddleBBInner{}
 }
 
-func (x *OuterMiddleBBInner) Error(b *polyglot.Buffer, err error) {
+func (x *OuterMiddleBBInner) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *OuterMiddleBBInner) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *OuterMiddleBBInner) Encode(b *polyglot.Buffer) {
@@ -889,8 +931,11 @@ func NewOuterMiddleBB() *OuterMiddleBB {
 	return &OuterMiddleBB{}
 }
 
-func (x *OuterMiddleBB) Error(b *polyglot.Buffer, err error) {
+func (x *OuterMiddleBB) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *OuterMiddleBB) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *OuterMiddleBB) Encode(b *polyglot.Buffer) {
@@ -950,8 +995,11 @@ func NewOuter() *Outer {
 	return &Outer{}
 }
 
-func (x *Outer) Error(b *polyglot.Buffer, err error) {
+func (x *Outer) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *Outer) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *Outer) Encode(b *polyglot.Buffer) {
@@ -1007,20 +1055,32 @@ func (x *Outer) decode(d *polyglot.BufferDecoder) error {
 	return nil
 }
 
+type SampleMessageTestOneofCase uint32
+
+const (
+	SampleMessageTestOneofCaseNotSet SampleMessageTestOneofCase = 0
+	SampleMessageTestOneofCaseName   SampleMessageTestOneofCase = 4
+	SampleMessageTestOneofCasePotato SampleMessageTestOneofCase = 9
+)
+
 type SampleMessage struct {
 	error error
 	flags uint8
 
-	Name   string
-	Potato string
+	testOneofCase SampleMessageTestOneofCase
+	Name          string
+	Potato        string
 }
 
 func NewSampleMessage() *SampleMessage {
 	return &SampleMessage{}
 }
 
-func (x *SampleMessage) Error(b *polyglot.Buffer, err error) {
+func (x *SampleMessage) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *SampleMessage) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *SampleMessage) Encode(b *polyglot.Buffer) {
@@ -1032,7 +1092,19 @@ func (x *SampleMessage) Encode(b *polyglot.Buffer) {
 			return
 		}
 		polyglot.Encoder(b).Uint8(x.flags)
-		polyglot.Encoder(b).String(x.Name).String(x.Potato)
+
+		polyglot.Encoder(b).Uint32(uint32(x.testOneofCase))
+		switch x.testOneofCase {
+		case SampleMessageTestOneofCaseNotSet:
+		case SampleMessageTestOneofCaseName:
+			polyglot.Encoder(b).String(x.Name)
+
+		case SampleMessageTestOneofCasePotato:
+			polyglot.Encoder(b).String(x.Potato)
+
+		default:
+			panic(ErrUnknownOneofCase)
+		}
 	}
 }
 
@@ -1057,15 +1129,609 @@ func (x *SampleMessage) decode(d *polyglot.BufferDecoder) error {
 	if err != nil {
 		return err
 	}
-	x.Name, err = d.String()
+	var TestOneofCaseRaw uint32
+	TestOneofCaseRaw, err = d.Uint32()
 	if err != nil {
 		return err
 	}
-	x.Potato, err = d.String()
+	x.ClearTestOneof()
+	switch SampleMessageTestOneofCase(TestOneofCaseRaw) {
+	case SampleMessageTestOneofCaseNotSet:
+	case SampleMessageTestOneofCaseName:
+		x.Name, err = d.String()
+		if err != nil {
+			return err
+		}
+		x.testOneofCase = SampleMessageTestOneofCaseName
+	case SampleMessageTestOneofCasePotato:
+		x.Potato, err = d.String()
+		if err != nil {
+			return err
+		}
+		x.testOneofCase = SampleMessageTestOneofCasePotato
+	default:
+		return ErrUnknownOneofCase
+	}
+	return nil
+}
+
+func (x *SampleMessage) WhichTestOneof() SampleMessageTestOneofCase {
+	if x == nil {
+		return SampleMessageTestOneofCaseNotSet
+	}
+	return x.testOneofCase
+}
+
+func (x *SampleMessage) ClearTestOneof() {
+	if x == nil {
+		return
+	}
+	x.testOneofCase = SampleMessageTestOneofCaseNotSet
+	x.Name = ""
+	x.Potato = ""
+}
+
+func (x *SampleMessage) SetName(value string) {
+	x.ClearTestOneof()
+	x.Name = value
+	x.testOneofCase = SampleMessageTestOneofCaseName
+}
+
+func (x *SampleMessage) GetName() string {
+	if x == nil || x.testOneofCase != SampleMessageTestOneofCaseName {
+		return ""
+	}
+	return x.Name
+}
+func (x *SampleMessage) SetPotato(value string) {
+	x.ClearTestOneof()
+	x.Potato = value
+	x.testOneofCase = SampleMessageTestOneofCasePotato
+}
+
+func (x *SampleMessage) GetPotato() string {
+	if x == nil || x.testOneofCase != SampleMessageTestOneofCasePotato {
+		return ""
+	}
+	return x.Potato
+}
+
+type OneofPayloadValueCase uint32
+
+const (
+	OneofPayloadValueCaseNotSet    OneofPayloadValueCase = 0
+	OneofPayloadValueCaseText      OneofPayloadValueCase = 2
+	OneofPayloadValueCaseRaw       OneofPayloadValueCase = 7
+	OneofPayloadValueCasePayload   OneofPayloadValueCase = 11
+	OneofPayloadValueCaseEnumValue OneofPayloadValueCase = 15
+	OneofPayloadValueCaseEnabled   OneofPayloadValueCase = 20
+	OneofPayloadValueCaseNumber    OneofPayloadValueCase = 25
+)
+
+type OneofPayloadSecondaryCase uint32
+
+const (
+	OneofPayloadSecondaryCaseNotSet OneofPayloadSecondaryCase = 0
+	OneofPayloadSecondaryCaseCode   OneofPayloadSecondaryCase = 30
+	OneofPayloadSecondaryCaseNote   OneofPayloadSecondaryCase = 31
+)
+
+type OneofPayload struct {
+	error error
+	flags uint8
+
+	valueCase     OneofPayloadValueCase
+	secondaryCase OneofPayloadSecondaryCase
+	Ordinary      string
+	Text          string
+	Raw           []byte
+	Payload       *Data
+	EnumValue     Test
+	Enabled       bool
+	Number        int64
+	Code          uint32
+	Note          string
+}
+
+func NewOneofPayload() *OneofPayload {
+	return &OneofPayload{}
+}
+
+func (x *OneofPayload) encodeError(b *polyglot.Buffer, err error) {
+	polyglot.Encoder(b).Error(err)
+}
+func (x *OneofPayload) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
+}
+
+func (x *OneofPayload) Encode(b *polyglot.Buffer) {
+	if x == nil {
+		polyglot.Encoder(b).Nil()
+	} else {
+		if x.error != nil {
+			polyglot.Encoder(b).Error(x.error)
+			return
+		}
+		polyglot.Encoder(b).Uint8(x.flags)
+		polyglot.Encoder(b).String(x.Ordinary)
+
+		polyglot.Encoder(b).Uint32(uint32(x.valueCase))
+		switch x.valueCase {
+		case OneofPayloadValueCaseNotSet:
+		case OneofPayloadValueCaseText:
+			polyglot.Encoder(b).String(x.Text)
+
+		case OneofPayloadValueCaseRaw:
+			polyglot.Encoder(b).Bytes(x.Raw)
+
+		case OneofPayloadValueCasePayload:
+			x.Payload.Encode(b)
+
+		case OneofPayloadValueCaseEnumValue:
+			polyglot.Encoder(b).Uint32(uint32(x.EnumValue))
+
+		case OneofPayloadValueCaseEnabled:
+			polyglot.Encoder(b).Bool(x.Enabled)
+
+		case OneofPayloadValueCaseNumber:
+			polyglot.Encoder(b).Int64(x.Number)
+
+		default:
+			panic(ErrUnknownOneofCase)
+		}
+
+		polyglot.Encoder(b).Uint32(uint32(x.secondaryCase))
+		switch x.secondaryCase {
+		case OneofPayloadSecondaryCaseNotSet:
+		case OneofPayloadSecondaryCaseCode:
+			polyglot.Encoder(b).Uint32(x.Code)
+
+		case OneofPayloadSecondaryCaseNote:
+			polyglot.Encoder(b).String(x.Note)
+
+		default:
+			panic(ErrUnknownOneofCase)
+		}
+	}
+}
+
+func (x *OneofPayload) Decode(b []byte) error {
+	if x == nil {
+		return ErrDecodeNil
+	}
+	return x.decode(polyglot.Decoder(b))
+}
+
+func (x *OneofPayload) decode(d *polyglot.BufferDecoder) error {
+	if d.Nil() {
+		return nil
+	}
+
+	var err error
+	x.error, err = d.Error()
+	if err == nil {
+		return nil
+	}
+	x.flags, err = d.Uint8()
+	if err != nil {
+		return err
+	}
+	x.Ordinary, err = d.String()
+	if err != nil {
+		return err
+	}
+	var ValueCaseRaw uint32
+	ValueCaseRaw, err = d.Uint32()
+	if err != nil {
+		return err
+	}
+	x.ClearValue()
+	switch OneofPayloadValueCase(ValueCaseRaw) {
+	case OneofPayloadValueCaseNotSet:
+	case OneofPayloadValueCaseText:
+		x.Text, err = d.String()
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCaseText
+	case OneofPayloadValueCaseRaw:
+		x.Raw, err = d.Bytes(x.Raw)
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCaseRaw
+	case OneofPayloadValueCasePayload:
+		if !d.Nil() {
+			x.Payload = NewData()
+			err = x.Payload.decode(d)
+		}
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCasePayload
+	case OneofPayloadValueCaseEnumValue:
+		var EnumValueRaw uint32
+		EnumValueRaw, err = d.Uint32()
+		x.EnumValue = Test(EnumValueRaw)
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCaseEnumValue
+	case OneofPayloadValueCaseEnabled:
+		x.Enabled, err = d.Bool()
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCaseEnabled
+	case OneofPayloadValueCaseNumber:
+		x.Number, err = d.Int64()
+		if err != nil {
+			return err
+		}
+		x.valueCase = OneofPayloadValueCaseNumber
+	default:
+		return ErrUnknownOneofCase
+	}
+	var SecondaryCaseRaw uint32
+	SecondaryCaseRaw, err = d.Uint32()
+	if err != nil {
+		return err
+	}
+	x.ClearSecondary()
+	switch OneofPayloadSecondaryCase(SecondaryCaseRaw) {
+	case OneofPayloadSecondaryCaseNotSet:
+	case OneofPayloadSecondaryCaseCode:
+		x.Code, err = d.Uint32()
+		if err != nil {
+			return err
+		}
+		x.secondaryCase = OneofPayloadSecondaryCaseCode
+	case OneofPayloadSecondaryCaseNote:
+		x.Note, err = d.String()
+		if err != nil {
+			return err
+		}
+		x.secondaryCase = OneofPayloadSecondaryCaseNote
+	default:
+		return ErrUnknownOneofCase
+	}
+	return nil
+}
+
+func (x *OneofPayload) WhichValue() OneofPayloadValueCase {
+	if x == nil {
+		return OneofPayloadValueCaseNotSet
+	}
+	return x.valueCase
+}
+
+func (x *OneofPayload) ClearValue() {
+	if x == nil {
+		return
+	}
+	x.valueCase = OneofPayloadValueCaseNotSet
+	x.Text = ""
+	x.Raw = nil
+	x.Payload = nil
+	x.EnumValue = 0
+	x.Enabled = false
+	x.Number = 0
+}
+
+func (x *OneofPayload) SetText(value string) {
+	x.ClearValue()
+	x.Text = value
+	x.valueCase = OneofPayloadValueCaseText
+}
+
+func (x *OneofPayload) GetText() string {
+	if x == nil || x.valueCase != OneofPayloadValueCaseText {
+		return ""
+	}
+	return x.Text
+}
+func (x *OneofPayload) SetRaw(value []byte) {
+	x.ClearValue()
+	x.Raw = value
+	x.valueCase = OneofPayloadValueCaseRaw
+}
+
+func (x *OneofPayload) GetRaw() []byte {
+	if x == nil || x.valueCase != OneofPayloadValueCaseRaw {
+		return nil
+	}
+	return x.Raw
+}
+func (x *OneofPayload) SetPayload(value *Data) {
+	x.ClearValue()
+	x.Payload = value
+	x.valueCase = OneofPayloadValueCasePayload
+}
+
+func (x *OneofPayload) GetPayload() *Data {
+	if x == nil || x.valueCase != OneofPayloadValueCasePayload {
+		return nil
+	}
+	return x.Payload
+}
+func (x *OneofPayload) SetEnumValue(value Test) {
+	x.ClearValue()
+	x.EnumValue = value
+	x.valueCase = OneofPayloadValueCaseEnumValue
+}
+
+func (x *OneofPayload) GetEnumValue() Test {
+	if x == nil || x.valueCase != OneofPayloadValueCaseEnumValue {
+		return 0
+	}
+	return x.EnumValue
+}
+func (x *OneofPayload) SetEnabled(value bool) {
+	x.ClearValue()
+	x.Enabled = value
+	x.valueCase = OneofPayloadValueCaseEnabled
+}
+
+func (x *OneofPayload) GetEnabled() bool {
+	if x == nil || x.valueCase != OneofPayloadValueCaseEnabled {
+		return false
+	}
+	return x.Enabled
+}
+func (x *OneofPayload) SetNumber(value int64) {
+	x.ClearValue()
+	x.Number = value
+	x.valueCase = OneofPayloadValueCaseNumber
+}
+
+func (x *OneofPayload) GetNumber() int64 {
+	if x == nil || x.valueCase != OneofPayloadValueCaseNumber {
+		return 0
+	}
+	return x.Number
+}
+func (x *OneofPayload) WhichSecondary() OneofPayloadSecondaryCase {
+	if x == nil {
+		return OneofPayloadSecondaryCaseNotSet
+	}
+	return x.secondaryCase
+}
+
+func (x *OneofPayload) ClearSecondary() {
+	if x == nil {
+		return
+	}
+	x.secondaryCase = OneofPayloadSecondaryCaseNotSet
+	x.Code = 0
+	x.Note = ""
+}
+
+func (x *OneofPayload) SetCode(value uint32) {
+	x.ClearSecondary()
+	x.Code = value
+	x.secondaryCase = OneofPayloadSecondaryCaseCode
+}
+
+func (x *OneofPayload) GetCode() uint32 {
+	if x == nil || x.secondaryCase != OneofPayloadSecondaryCaseCode {
+		return 0
+	}
+	return x.Code
+}
+func (x *OneofPayload) SetNote(value string) {
+	x.ClearSecondary()
+	x.Note = value
+	x.secondaryCase = OneofPayloadSecondaryCaseNote
+}
+
+func (x *OneofPayload) GetNote() string {
+	if x == nil || x.secondaryCase != OneofPayloadSecondaryCaseNote {
+		return ""
+	}
+	return x.Note
+}
+
+type RegularPayload struct {
+	error error
+	flags uint8
+
+	Text string
+}
+
+func NewRegularPayload() *RegularPayload {
+	return &RegularPayload{}
+}
+
+func (x *RegularPayload) encodeError(b *polyglot.Buffer, err error) {
+	polyglot.Encoder(b).Error(err)
+}
+func (x *RegularPayload) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
+}
+
+func (x *RegularPayload) Encode(b *polyglot.Buffer) {
+	if x == nil {
+		polyglot.Encoder(b).Nil()
+	} else {
+		if x.error != nil {
+			polyglot.Encoder(b).Error(x.error)
+			return
+		}
+		polyglot.Encoder(b).Uint8(x.flags)
+		polyglot.Encoder(b).String(x.Text)
+	}
+}
+
+func (x *RegularPayload) Decode(b []byte) error {
+	if x == nil {
+		return ErrDecodeNil
+	}
+	return x.decode(polyglot.Decoder(b))
+}
+
+func (x *RegularPayload) decode(d *polyglot.BufferDecoder) error {
+	if d.Nil() {
+		return nil
+	}
+
+	var err error
+	x.error, err = d.Error()
+	if err == nil {
+		return nil
+	}
+	x.flags, err = d.Uint8()
+	if err != nil {
+		return err
+	}
+	x.Text, err = d.String()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+type ErrorOneofResultCase uint32
+
+const (
+	ErrorOneofResultCaseNotSet ErrorOneofResultCase = 0
+	ErrorOneofResultCaseValue  ErrorOneofResultCase = 1
+	ErrorOneofResultCaseError  ErrorOneofResultCase = 2
+)
+
+type ErrorOneof struct {
+	error error
+	flags uint8
+
+	resultCase ErrorOneofResultCase
+	Value      *Data
+	Error      *Data
+}
+
+func NewErrorOneof() *ErrorOneof {
+	return &ErrorOneof{}
+}
+
+func (x *ErrorOneof) encodeError(b *polyglot.Buffer, err error) {
+	polyglot.Encoder(b).Error(err)
+}
+
+func (x *ErrorOneof) Encode(b *polyglot.Buffer) {
+	if x == nil {
+		polyglot.Encoder(b).Nil()
+	} else {
+		if x.error != nil {
+			polyglot.Encoder(b).Error(x.error)
+			return
+		}
+		polyglot.Encoder(b).Uint8(x.flags)
+
+		polyglot.Encoder(b).Uint32(uint32(x.resultCase))
+		switch x.resultCase {
+		case ErrorOneofResultCaseNotSet:
+		case ErrorOneofResultCaseValue:
+			x.Value.Encode(b)
+
+		case ErrorOneofResultCaseError:
+			x.Error.Encode(b)
+
+		default:
+			panic(ErrUnknownOneofCase)
+		}
+	}
+}
+
+func (x *ErrorOneof) Decode(b []byte) error {
+	if x == nil {
+		return ErrDecodeNil
+	}
+	return x.decode(polyglot.Decoder(b))
+}
+
+func (x *ErrorOneof) decode(d *polyglot.BufferDecoder) error {
+	if d.Nil() {
+		return nil
+	}
+
+	var err error
+	x.error, err = d.Error()
+	if err == nil {
+		return nil
+	}
+	x.flags, err = d.Uint8()
+	if err != nil {
+		return err
+	}
+	var ResultCaseRaw uint32
+	ResultCaseRaw, err = d.Uint32()
+	if err != nil {
+		return err
+	}
+	x.ClearResult()
+	switch ErrorOneofResultCase(ResultCaseRaw) {
+	case ErrorOneofResultCaseNotSet:
+	case ErrorOneofResultCaseValue:
+		if !d.Nil() {
+			x.Value = NewData()
+			err = x.Value.decode(d)
+		}
+		if err != nil {
+			return err
+		}
+		x.resultCase = ErrorOneofResultCaseValue
+	case ErrorOneofResultCaseError:
+		if !d.Nil() {
+			x.Error = NewData()
+			err = x.Error.decode(d)
+		}
+		if err != nil {
+			return err
+		}
+		x.resultCase = ErrorOneofResultCaseError
+	default:
+		return ErrUnknownOneofCase
+	}
+	return nil
+}
+
+func (x *ErrorOneof) WhichResult() ErrorOneofResultCase {
+	if x == nil {
+		return ErrorOneofResultCaseNotSet
+	}
+	return x.resultCase
+}
+
+func (x *ErrorOneof) ClearResult() {
+	if x == nil {
+		return
+	}
+	x.resultCase = ErrorOneofResultCaseNotSet
+	x.Value = nil
+	x.Error = nil
+}
+
+func (x *ErrorOneof) SetValue(value *Data) {
+	x.ClearResult()
+	x.Value = value
+	x.resultCase = ErrorOneofResultCaseValue
+}
+
+func (x *ErrorOneof) GetValue() *Data {
+	if x == nil || x.resultCase != ErrorOneofResultCaseValue {
+		return nil
+	}
+	return x.Value
+}
+func (x *ErrorOneof) SetError(value *Data) {
+	x.ClearResult()
+	x.Error = value
+	x.resultCase = ErrorOneofResultCaseError
+}
+
+func (x *ErrorOneof) GetError() *Data {
+	if x == nil || x.resultCase != ErrorOneofResultCaseError {
+		return nil
+	}
+	return x.Error
 }
 
 type TestPotatoPricesMap map[string]Test
@@ -1120,8 +1786,11 @@ func NewTestPotato() *TestPotato {
 	return &TestPotato{}
 }
 
-func (x *TestPotato) Error(b *polyglot.Buffer, err error) {
+func (x *TestPotato) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *TestPotato) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *TestPotato) Encode(b *polyglot.Buffer) {
@@ -1223,8 +1892,11 @@ func NewStockPrices() *StockPrices {
 	return &StockPrices{}
 }
 
-func (x *StockPrices) Error(b *polyglot.Buffer, err error) {
+func (x *StockPrices) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *StockPrices) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *StockPrices) Encode(b *polyglot.Buffer) {
@@ -1287,8 +1959,11 @@ func NewStockPricesWrapper() *StockPricesWrapper {
 	return &StockPricesWrapper{}
 }
 
-func (x *StockPricesWrapper) Error(b *polyglot.Buffer, err error) {
+func (x *StockPricesWrapper) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *StockPricesWrapper) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *StockPricesWrapper) Encode(b *polyglot.Buffer) {
@@ -1400,8 +2075,11 @@ func NewStockPricesSuperWrap() *StockPricesSuperWrap {
 	return &StockPricesSuperWrap{}
 }
 
-func (x *StockPricesSuperWrap) Error(b *polyglot.Buffer, err error) {
+func (x *StockPricesSuperWrap) encodeError(b *polyglot.Buffer, err error) {
 	polyglot.Encoder(b).Error(err)
+}
+func (x *StockPricesSuperWrap) Error(b *polyglot.Buffer, err error) {
+	x.encodeError(b, err)
 }
 
 func (x *StockPricesSuperWrap) Encode(b *polyglot.Buffer) {
@@ -1521,7 +2199,7 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 				if _, ok := err.(CloseError); ok {
 					action = frisbee.CLOSE
 				}
-				res.Error(outgoing.Content, err)
+				res.encodeError(outgoing.Content, err)
 			} else {
 				res.Encode(outgoing.Content)
 			}
@@ -1541,7 +2219,7 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 				if _, ok := err.(CloseError); ok {
 					action = frisbee.CLOSE
 				}
-				res.Error(outgoing.Content, err)
+				res.encodeError(outgoing.Content, err)
 			} else {
 				res.Encode(outgoing.Content)
 			}
@@ -1571,8 +2249,9 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 		}
 		open := &RPCStreamOpen{}
 		err = open.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
-			stream.Close()
+			_ = stream.Close()
 			return
 		}
 		switch open.operation {
@@ -1582,8 +2261,14 @@ func NewServer(echoService EchoService, tlsConfig *tls.Config, logger types.Logg
 			s.createSearchServer(streamCtx, echoService, stream)
 		case 14:
 			s.createUploadServer(streamCtx, echoService, stream)
+		default:
+			_ = stream.Close()
 		}
 	})
+
+	s.server.StreamContext = func(ctx context.Context, stream *frisbee.Stream) context.Context {
+		return context.WithValue(ctx, ConnectionContextKey, stream.Conn())
+	}
 
 	s.server.ConnContext = func(ctx context.Context, conn *frisbee.Async) context.Context {
 		return context.WithValue(ctx, ConnectionContextKey, conn)
@@ -1629,8 +2314,8 @@ type EchoStreamServer struct {
 	recv func() (*Request, error)
 	send func(*Response) error
 
-	stream *frisbee.Stream
-	closed *atomic.Bool
+	stream     *frisbee.Stream
+	sendClosed atomic.Bool
 }
 
 func (s *Server) createEchoStreamServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
@@ -1646,11 +2331,15 @@ func (s *Server) createEchoStreamServer(ctx context.Context, echoService EchoSer
 
 		res := NewRequest()
 		err = res.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
 			return nil, err
 		}
 		if errors.Is(res.error, io.EOF) {
 			return nil, io.EOF
+		}
+		if res.error != nil {
+			return nil, res.error
 		}
 
 		return res, nil
@@ -1660,11 +2349,15 @@ func (s *Server) createEchoStreamServer(ctx context.Context, echoService EchoSer
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return srv.stream.WritePacket(p)
+		err := srv.stream.WritePacket(p)
+		packet.Put(p)
+		return err
 	}
 
 	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
+		defer srv.close()
 		err := echoService.EchoStream(ctx, srv)
 		if err != nil {
 			res := Response{error: err}
@@ -1673,7 +2366,6 @@ func (s *Server) createEchoStreamServer(ctx context.Context, echoService EchoSer
 		} else {
 			srv.CloseSend()
 		}
-		s.wg.Done()
 	}()
 }
 
@@ -1682,12 +2374,16 @@ func (x *EchoStreamServer) Recv() (*Request, error) {
 }
 
 func (x *EchoStreamServer) close() {
-	x.stream.Close()
+	_ = x.stream.Close()
 }
+
 func (x *EchoStreamServer) Send(m *Response) error {
 	return x.send(m)
 }
 func (x *EchoStreamServer) CloseSend() error {
+	if !x.sendClosed.CompareAndSwap(false, true) {
+		return nil
+	}
 	return x.send(&Response{error: io.EOF})
 }
 
@@ -1707,8 +2403,8 @@ type SearchServer struct {
 	recv func() (*SearchResponse, error)
 	send func(*Response) error
 
-	stream *frisbee.Stream
-	closed *atomic.Bool
+	stream     *frisbee.Stream
+	sendClosed atomic.Bool
 }
 
 func (s *Server) createSearchServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
@@ -1721,7 +2417,9 @@ func (s *Server) createSearchServer(ctx context.Context, echoService EchoService
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return srv.stream.WritePacket(p)
+		err := srv.stream.WritePacket(p)
+		packet.Put(p)
+		return err
 	}
 
 	incoming, err := stream.ReadPacket()
@@ -1730,8 +2428,15 @@ func (s *Server) createSearchServer(ctx context.Context, echoService EchoService
 	}
 	req := NewSearchResponse()
 	err = req.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+	packet.Put(incoming)
+	if err != nil {
+		_ = stream.Close()
+		return
+	}
 	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
+		defer srv.close()
 
 		err := echoService.Search(ctx, req, srv)
 		if err != nil {
@@ -1741,14 +2446,20 @@ func (s *Server) createSearchServer(ctx context.Context, echoService EchoService
 		} else {
 			srv.CloseSend()
 		}
-		s.wg.Done()
 	}()
+}
+
+func (x *SearchServer) close() {
+	_ = x.stream.Close()
 }
 
 func (x *SearchServer) Send(m *Response) error {
 	return x.send(m)
 }
 func (x *SearchServer) CloseSend() error {
+	if !x.sendClosed.CompareAndSwap(false, true) {
+		return nil
+	}
 	return x.send(&Response{error: io.EOF})
 }
 
@@ -1768,8 +2479,8 @@ type UploadServer struct {
 	recv func() (*Data, error)
 	send func(*Response) error
 
-	stream *frisbee.Stream
-	closed *atomic.Bool
+	stream     *frisbee.Stream
+	sendClosed atomic.Bool
 }
 
 func (s *Server) createUploadServer(ctx context.Context, echoService EchoService, stream *frisbee.Stream) {
@@ -1785,11 +2496,15 @@ func (s *Server) createUploadServer(ctx context.Context, echoService EchoService
 
 		res := NewData()
 		err = res.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
 			return nil, err
 		}
 		if errors.Is(res.error, io.EOF) {
 			return nil, io.EOF
+		}
+		if res.error != nil {
+			return nil, res.error
 		}
 
 		return res, nil
@@ -1799,11 +2514,15 @@ func (s *Server) createUploadServer(ctx context.Context, echoService EchoService
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return srv.stream.WritePacket(p)
+		err := srv.stream.WritePacket(p)
+		packet.Put(p)
+		return err
 	}
 
 	s.wg.Add(1)
 	go func() {
+		defer s.wg.Done()
+		defer srv.close()
 		err := echoService.Upload(ctx, srv)
 		if err != nil {
 			res := Response{error: err}
@@ -1812,7 +2531,6 @@ func (s *Server) createUploadServer(ctx context.Context, echoService EchoService
 		} else {
 			srv.CloseSend()
 		}
-		s.wg.Done()
 	}()
 }
 
@@ -1821,9 +2539,13 @@ func (x *UploadServer) Recv() (*Data, error) {
 }
 
 func (x *UploadServer) close() {
-	x.stream.Close()
+	_ = x.stream.Close()
 }
+
 func (x *UploadServer) CloseSend() error {
+	if !x.sendClosed.CompareAndSwap(false, true) {
+		return nil
+	}
 	return x.send(&Response{error: io.EOF})
 }
 
@@ -1839,18 +2561,47 @@ func (x *UploadServer) CloseAndSend(m *Response) error {
 	return x.CloseSend()
 }
 
+type clientStreamIDs struct {
+	mu     sync.Mutex
+	next   uint16
+	active map[uint16]struct{}
+}
+
+func newClientStreamIDs() *clientStreamIDs {
+	return &clientStreamIDs{active: make(map[uint16]struct{})}
+}
+
+func (s *clientStreamIDs) acquire() (uint16, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for range 1 << 16 {
+		s.next++
+		if _, ok := s.active[s.next]; ok {
+			continue
+		}
+		s.active[s.next] = struct{}{}
+		return s.next, nil
+	}
+	return 0, errors.New("frpc: no stream IDs available")
+}
+
+func (s *clientStreamIDs) release(id uint16) {
+	s.mu.Lock()
+	delete(s.active, id)
+	s.mu.Unlock()
+}
+
 type subEchoServiceClient struct {
-	client            *frisbee.Client
-	nextEcho          uint16
-	nextEchoMu        sync.RWMutex
-	inflightEcho      map[uint16]chan *Response
-	inflightEchoMu    sync.RWMutex
-	nextTesty         uint16
-	nextTestyMu       sync.RWMutex
-	inflightTesty     map[uint16]chan *StockPricesWrapper
-	inflightTestyMu   sync.RWMutex
-	nextStreamingID   uint16
-	nextStreamingIDMu sync.RWMutex
+	client          *frisbee.Client
+	nextEcho        uint16
+	nextEchoMu      sync.RWMutex
+	inflightEcho    map[uint16]chan *Response
+	inflightEchoMu  sync.RWMutex
+	nextTesty       uint16
+	nextTestyMu     sync.RWMutex
+	inflightTesty   map[uint16]chan *StockPricesWrapper
+	inflightTestyMu sync.RWMutex
+	streamIDs       *clientStreamIDs
 }
 type Client struct {
 	*frisbee.Client
@@ -1866,7 +2617,9 @@ func NewClient(tlsConfig *tls.Config, logger types.Logger) (*Client, error) {
 		if ch, ok := c.EchoService.inflightEcho[incoming.Metadata.Id]; ok {
 			c.EchoService.inflightEchoMu.RUnlock()
 			res := NewResponse()
-			res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+			if err := res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength]); err != nil {
+				res.error = err
+			}
 			ch <- res
 		} else {
 			c.EchoService.inflightEchoMu.RUnlock()
@@ -1878,13 +2631,16 @@ func NewClient(tlsConfig *tls.Config, logger types.Logger) (*Client, error) {
 		if ch, ok := c.EchoService.inflightTesty[incoming.Metadata.Id]; ok {
 			c.EchoService.inflightTestyMu.RUnlock()
 			res := NewStockPricesWrapper()
-			res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength])
+			if err := res.Decode((*incoming.Content).Bytes()[:incoming.Metadata.ContentLength]); err != nil {
+				res.error = err
+			}
 			ch <- res
 		} else {
 			c.EchoService.inflightTestyMu.RUnlock()
 		}
 		return
 	}
+	streamIDs := newClientStreamIDs()
 	var err error
 	if tlsConfig != nil {
 		c.Client, err = frisbee.NewClient(table, context.Background(), frisbee.WithTLS(tlsConfig), frisbee.WithLogger(logger))
@@ -1900,6 +2656,7 @@ func NewClient(tlsConfig *tls.Config, logger types.Logger) (*Client, error) {
 
 	c.EchoService = new(subEchoServiceClient)
 	c.EchoService.client = c.Client
+	c.EchoService.streamIDs = streamIDs
 	c.EchoService.nextEchoMu.Lock()
 	c.EchoService.nextEcho = 0
 	c.EchoService.nextEchoMu.Unlock()
@@ -1956,12 +2713,16 @@ func (c *subEchoServiceClient) Echo(ctx context.Context, req *Request) (res *Res
 }
 
 func (c *subEchoServiceClient) EchoStream(ctx context.Context, req *Request) (*EchoStreamClient, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	p := packet.Get()
 
-	c.nextStreamingIDMu.Lock()
-	c.nextStreamingID += 1
-	id := c.nextStreamingID
-	c.nextStreamingIDMu.Unlock()
+	id, err := c.streamIDs.acquire()
+	if err != nil {
+		packet.Put(p)
+		return nil, err
+	}
 
 	open := &RPCStreamOpen{operation: 11}
 
@@ -1969,56 +2730,103 @@ func (c *subEchoServiceClient) EchoStream(ctx context.Context, req *Request) (*E
 	p.Metadata.ContentLength = uint32((*p.Content).Len())
 
 	fStream := c.client.Stream(id)
-	fStream.WritePacket(p)
+	err = fStream.WritePacket(p)
+	packet.Put(p)
+	if err != nil {
+		_ = fStream.Close()
+		c.streamIDs.release(id)
+		return nil, err
+	}
 
 	if req != nil {
 		p2 := packet.Get()
 		req.Encode(p2.Content)
 		p2.Metadata.ContentLength = uint32((*p2.Content).Len())
-		fStream.WritePacket(p2)
+		err = fStream.WritePacket(p2)
+		packet.Put(p2)
+		if err != nil {
+			_ = fStream.Close()
+			c.streamIDs.release(id)
+			return nil, err
+		}
 	}
 
 	stream := EchoStreamClient{
 		context: ctx,
 		stream:  fStream,
+		done:    make(chan struct{}),
 	}
+
+	stream.close = func() {
+		stream.closeOnce.Do(func() {
+			close(stream.done)
+			_ = stream.stream.Close()
+			c.streamIDs.release(id)
+		})
+	}
+	go func() {
+		select {
+		case <-ctx.Done():
+			stream.close()
+		case <-stream.done:
+		}
+	}()
 
 	stream.recv = func() (*Response, error) {
 		p, err := stream.stream.ReadPacket()
 		if err != nil {
+			stream.close()
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
 			return nil, err
 		}
 
 		res := NewResponse()
 		err = res.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
+			stream.close()
 			return nil, err
 		}
 		if errors.Is(res.error, io.EOF) {
+			stream.close()
 			return nil, io.EOF
+		}
+		if res.error != nil {
+			stream.close()
+			return nil, res.error
 		}
 
 		return res, nil
 	}
 
-	stream.close = func() {
-		stream.stream.Close()
-	}
 	stream.send = func(m *Request) error {
+		if err := ctx.Err(); err != nil {
+			stream.close()
+			return err
+		}
 		p := packet.Get()
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return stream.stream.WritePacket(p)
+		err := stream.stream.WritePacket(p)
+		packet.Put(p)
+		if err != nil {
+			stream.close()
+		}
+		return err
 	}
 	return &stream, nil
 }
 
 type EchoStreamClient struct {
-	context context.Context
-	recv    func() (*Response, error)
-	close   func()
-	closed  *atomic.Bool
+	context    context.Context
+	recv       func() (*Response, error)
+	close      func()
+	closeOnce  sync.Once
+	done       chan struct{}
+	sendClosed atomic.Bool
 
 	stream *frisbee.Stream
 	send   func(*Request) error
@@ -2026,6 +2834,10 @@ type EchoStreamClient struct {
 
 func (x *EchoStreamClient) CloseChannel() <-chan struct{} {
 	return x.stream.Conn().CloseChannel()
+}
+
+func (x *EchoStreamClient) Close() {
+	x.close()
 }
 
 func (x *EchoStreamClient) Recv() (*Response, error) {
@@ -2036,15 +2848,28 @@ func (x *EchoStreamClient) Send(m *Request) error {
 }
 
 func (x *EchoStreamClient) CloseSend() error {
+	if !x.sendClosed.CompareAndSwap(false, true) {
+		return nil
+	}
 	return x.send(&Request{error: io.EOF})
 }
 
 func (x *EchoStreamClient) CloseAndRecv() (*Response, error) {
-	err := x.send(&Request{error: io.EOF})
+	if err := x.CloseSend(); err != nil {
+		return nil, err
+	}
+	res, err := x.recv()
 	if err != nil {
 		return nil, err
 	}
-	return x.recv()
+	_, err = x.recv()
+	if !errors.Is(err, io.EOF) {
+		if err == nil {
+			return nil, errors.New("frpc: missing stream EOF")
+		}
+		return nil, err
+	}
+	return res, nil
 }
 
 func (c *subEchoServiceClient) Testy(ctx context.Context, req *SearchResponse) (res *StockPricesWrapper, err error) {
@@ -2084,12 +2909,16 @@ func (c *subEchoServiceClient) Testy(ctx context.Context, req *SearchResponse) (
 }
 
 func (c *subEchoServiceClient) Search(ctx context.Context, req *SearchResponse) (*SearchClient, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	p := packet.Get()
 
-	c.nextStreamingIDMu.Lock()
-	c.nextStreamingID += 1
-	id := c.nextStreamingID
-	c.nextStreamingIDMu.Unlock()
+	id, err := c.streamIDs.acquire()
+	if err != nil {
+		packet.Put(p)
+		return nil, err
+	}
 
 	open := &RPCStreamOpen{operation: 13}
 
@@ -2097,56 +2926,103 @@ func (c *subEchoServiceClient) Search(ctx context.Context, req *SearchResponse) 
 	p.Metadata.ContentLength = uint32((*p.Content).Len())
 
 	fStream := c.client.Stream(id)
-	fStream.WritePacket(p)
+	err = fStream.WritePacket(p)
+	packet.Put(p)
+	if err != nil {
+		_ = fStream.Close()
+		c.streamIDs.release(id)
+		return nil, err
+	}
 
 	if req != nil {
 		p2 := packet.Get()
 		req.Encode(p2.Content)
 		p2.Metadata.ContentLength = uint32((*p2.Content).Len())
-		fStream.WritePacket(p2)
+		err = fStream.WritePacket(p2)
+		packet.Put(p2)
+		if err != nil {
+			_ = fStream.Close()
+			c.streamIDs.release(id)
+			return nil, err
+		}
 	}
 
 	stream := SearchClient{
 		context: ctx,
 		stream:  fStream,
+		done:    make(chan struct{}),
 	}
+
+	stream.close = func() {
+		stream.closeOnce.Do(func() {
+			close(stream.done)
+			_ = stream.stream.Close()
+			c.streamIDs.release(id)
+		})
+	}
+	go func() {
+		select {
+		case <-ctx.Done():
+			stream.close()
+		case <-stream.done:
+		}
+	}()
 
 	stream.recv = func() (*Response, error) {
 		p, err := stream.stream.ReadPacket()
 		if err != nil {
+			stream.close()
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
 			return nil, err
 		}
 
 		res := NewResponse()
 		err = res.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
+			stream.close()
 			return nil, err
 		}
 		if errors.Is(res.error, io.EOF) {
+			stream.close()
 			return nil, io.EOF
+		}
+		if res.error != nil {
+			stream.close()
+			return nil, res.error
 		}
 
 		return res, nil
 	}
 
-	stream.close = func() {
-		stream.stream.Close()
-	}
 	stream.send = func(m *SearchResponse) error {
+		if err := ctx.Err(); err != nil {
+			stream.close()
+			return err
+		}
 		p := packet.Get()
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return stream.stream.WritePacket(p)
+		err := stream.stream.WritePacket(p)
+		packet.Put(p)
+		if err != nil {
+			stream.close()
+		}
+		return err
 	}
 	return &stream, nil
 }
 
 type SearchClient struct {
-	context context.Context
-	recv    func() (*Response, error)
-	close   func()
-	closed  *atomic.Bool
+	context    context.Context
+	recv       func() (*Response, error)
+	close      func()
+	closeOnce  sync.Once
+	done       chan struct{}
+	sendClosed atomic.Bool
 
 	stream *frisbee.Stream
 	send   func(*SearchResponse) error
@@ -2156,17 +3032,25 @@ func (x *SearchClient) CloseChannel() <-chan struct{} {
 	return x.stream.Conn().CloseChannel()
 }
 
+func (x *SearchClient) Close() {
+	x.close()
+}
+
 func (x *SearchClient) Recv() (*Response, error) {
 	return x.recv()
 }
 
 func (c *subEchoServiceClient) Upload(ctx context.Context, req *Data) (*UploadClient, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	p := packet.Get()
 
-	c.nextStreamingIDMu.Lock()
-	c.nextStreamingID += 1
-	id := c.nextStreamingID
-	c.nextStreamingIDMu.Unlock()
+	id, err := c.streamIDs.acquire()
+	if err != nil {
+		packet.Put(p)
+		return nil, err
+	}
 
 	open := &RPCStreamOpen{operation: 14}
 
@@ -2174,56 +3058,103 @@ func (c *subEchoServiceClient) Upload(ctx context.Context, req *Data) (*UploadCl
 	p.Metadata.ContentLength = uint32((*p.Content).Len())
 
 	fStream := c.client.Stream(id)
-	fStream.WritePacket(p)
+	err = fStream.WritePacket(p)
+	packet.Put(p)
+	if err != nil {
+		_ = fStream.Close()
+		c.streamIDs.release(id)
+		return nil, err
+	}
 
 	if req != nil {
 		p2 := packet.Get()
 		req.Encode(p2.Content)
 		p2.Metadata.ContentLength = uint32((*p2.Content).Len())
-		fStream.WritePacket(p2)
+		err = fStream.WritePacket(p2)
+		packet.Put(p2)
+		if err != nil {
+			_ = fStream.Close()
+			c.streamIDs.release(id)
+			return nil, err
+		}
 	}
 
 	stream := UploadClient{
 		context: ctx,
 		stream:  fStream,
+		done:    make(chan struct{}),
 	}
+
+	stream.close = func() {
+		stream.closeOnce.Do(func() {
+			close(stream.done)
+			_ = stream.stream.Close()
+			c.streamIDs.release(id)
+		})
+	}
+	go func() {
+		select {
+		case <-ctx.Done():
+			stream.close()
+		case <-stream.done:
+		}
+	}()
 
 	stream.recv = func() (*Response, error) {
 		p, err := stream.stream.ReadPacket()
 		if err != nil {
+			stream.close()
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return nil, ctxErr
+			}
 			return nil, err
 		}
 
 		res := NewResponse()
 		err = res.Decode((*p.Content).Bytes())
+		packet.Put(p)
 		if err != nil {
+			stream.close()
 			return nil, err
 		}
 		if errors.Is(res.error, io.EOF) {
+			stream.close()
 			return nil, io.EOF
+		}
+		if res.error != nil {
+			stream.close()
+			return nil, res.error
 		}
 
 		return res, nil
 	}
 
-	stream.close = func() {
-		stream.stream.Close()
-	}
 	stream.send = func(m *Data) error {
+		if err := ctx.Err(); err != nil {
+			stream.close()
+			return err
+		}
 		p := packet.Get()
 
 		m.Encode(p.Content)
 		p.Metadata.ContentLength = uint32((*p.Content).Len())
-		return stream.stream.WritePacket(p)
+		err := stream.stream.WritePacket(p)
+		packet.Put(p)
+		if err != nil {
+			stream.close()
+		}
+		return err
 	}
 	return &stream, nil
 }
 
 type UploadClient struct {
-	context context.Context
-	recv    func() (*Response, error)
-	close   func()
-	closed  *atomic.Bool
+	context    context.Context
+	recv       func() (*Response, error)
+	close      func()
+	closeOnce  sync.Once
+	done       chan struct{}
+	sendClosed atomic.Bool
 
 	stream *frisbee.Stream
 	send   func(*Data) error
@@ -2233,20 +3164,37 @@ func (x *UploadClient) CloseChannel() <-chan struct{} {
 	return x.stream.Conn().CloseChannel()
 }
 
+func (x *UploadClient) Close() {
+	x.close()
+}
+
 func (x *UploadClient) Send(m *Data) error {
 	return x.send(m)
 }
 
 func (x *UploadClient) CloseSend() error {
+	if !x.sendClosed.CompareAndSwap(false, true) {
+		return nil
+	}
 	return x.send(&Data{error: io.EOF})
 }
 
 func (x *UploadClient) CloseAndRecv() (*Response, error) {
-	err := x.send(&Data{error: io.EOF})
+	if err := x.CloseSend(); err != nil {
+		return nil, err
+	}
+	res, err := x.recv()
 	if err != nil {
 		return nil, err
 	}
-	return x.recv()
+	_, err = x.recv()
+	if !errors.Is(err, io.EOF) {
+		if err == nil {
+			return nil, errors.New("frpc: missing stream EOF")
+		}
+		return nil, err
+	}
+	return res, nil
 }
 
 type CloseError struct {
